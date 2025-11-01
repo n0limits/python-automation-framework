@@ -1,21 +1,69 @@
 """
-Pytest configuration and fixtures for all tests
+Tests conftest.py - Test fixtures and configuration
+Provides fixtures for all test suites
 """
 import pytest
 import requests
 from playwright.sync_api import sync_playwright
 from config.settings import settings
+from utils.bvnk.api_client import BVNKApiClient
 
 
 # ============================================
-# API Testing Fixtures
+# BVNK API Testing Fixtures
+# ============================================
+
+@pytest.fixture(scope="session")
+def bvnk_client():
+    """
+    Session-scoped fixture for BVNK API client
+    Initializes account once per test session
+    """
+    client = BVNKApiClient()
+
+    # Initialize account and get bearer token
+    init_response = client.init_account()
+    print(f"\nAccount initialized. Token expires: {init_response.get('expiry', 'Unknown')}")
+
+    yield client
+
+    # Cleanup
+    client.close()
+
+
+@pytest.fixture(scope="function")
+def bvnk_api():
+    """
+    Function-scoped fixture for BVNK API client
+    Creates fresh client for each test
+    """
+    client = BVNKApiClient()
+
+    # Initialize account
+    init_response = client.init_account()
+    print(f"\nTest account created. Token: {init_response.get('token', 'N/A')[:20]}...")
+
+    yield client
+
+    # Cleanup
+    client.close()
+
+
+@pytest.fixture
+def bvnk_base_url():
+    """Fixture that provides BVNK API base URL"""
+    return settings.BVNK_API_BASE_URL
+
+
+# ============================================
+# Generic API Testing Fixtures
 # ============================================
 
 @pytest.fixture
 def api_client():
     """
-    Fixture that provides a requests session for API testing
-    with automatic header setup and cleanup
+    Generic API client fixture using requests
+    For testing non-BVNK APIs
     """
     session = requests.Session()
     session.headers.update({
@@ -23,22 +71,9 @@ def api_client():
         'Accept': 'application/json'
     })
 
-    # Add authentication if needed
-    if hasattr(settings, 'API_KEY') and settings.API_KEY:
-        session.headers.update({
-            'Authorization': f'Bearer {settings.API_KEY}'
-        })
-
     yield session
 
-    # Cleanup
     session.close()
-
-
-@pytest.fixture
-def api_base_url():
-    """Fixture that provides the API base URL"""
-    return settings.API_BASE_URL
 
 
 # ============================================
@@ -80,7 +115,7 @@ def page(context):
 
 @pytest.fixture
 def test_user_data():
-    """Fixture that provides test user data"""
+    """Fixture that provides static test user data"""
     return {
         'name': 'Test User',
         'email': 'testuser@example.com',
@@ -101,17 +136,24 @@ def random_user_data(faker):
 
 
 # ============================================
-# Configuration Hooks
+# Pytest Hooks
 # ============================================
 
-def pytest_configure(config):
-    """Configure pytest with custom markers"""
-    config.addinivalue_line("markers", "smoke: Quick smoke tests")
-    config.addinivalue_line("markers", "regression: Full regression suite")
-    config.addinivalue_line("markers", "frontend: Desktop web tests")
-    config.addinivalue_line("markers", "backend: Backend/API tests")
-    config.addinivalue_line("markers", "mobile: Mobile web tests")
-    config.addinivalue_line("markers", "mobile_app: Native mobile app tests")
-    config.addinivalue_line("markers", "android: Android specific tests")
-    config.addinivalue_line("markers", "ios: iOS specific tests")
-    config.addinivalue_line("markers", "slow: Slow running tests")
+def pytest_runtest_makereport(item, call):
+    """
+    Hook to capture test results
+    Can be used for custom reporting or screenshots on failure
+    """
+    if call.when == "call":
+        if call.excinfo is not None:
+            # Test failed
+            print(f"\nTest failed: {item.name}")
+
+
+def pytest_collection_modifyitems(config, items):
+    """
+    Hook to modify test items after collection
+    Can be used to add markers, reorder tests, etc.
+    """
+    # Example: Run smoke tests first
+    items.sort(key=lambda item: 0 if "smoke" in item.keywords else 1)
