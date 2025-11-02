@@ -26,9 +26,13 @@ def wallet_balances(bvnk_api):
     balances = {}
 
     for wallet in wallets:
-        currency = wallet.get('currency')
-        balance = wallet.get('balance', 0)
-        balances[currency] = float(balance)
+        # FIX: Currency is nested inside a 'currency' object
+        currency_obj = wallet.get('currency', {})
+        currency_code = currency_obj.get('code', '')
+
+        if currency_code:
+            balance_str = wallet.get('balance', '0')
+            balances[currency_code] = float(balance_str)
 
     print(f"\nInitial wallet balances: {balances}")
     return balances
@@ -63,7 +67,8 @@ def create_and_accept_quote(bvnk_api):
 
         # Create quote
         quote = bvnk_api.create_quote(from_currency, to_currency, amount)
-        print(f"Quote created: UUID={quote['uuid']}, Rate={quote.get('rate', 'N/A')}")
+        # FIX: Changed 'rate' to 'price'
+        print(f"Quote created: UUID={quote['uuid']}, Price={quote.get('price', 'N/A')}")
 
         # Accept quote
         accept_response = bvnk_api.accept_quote(quote['uuid'])
@@ -194,9 +199,9 @@ def print_test_header():
     """
     def _print_header(test_name):
         """Print formatted test header"""
-        print("\n" + "="*70)
+        print("\n" + "="*60)
         print(f"TEST: {test_name}")
-        print("="*70 + "\n")
+        print("="*60 + "\n")
 
     return _print_header
 

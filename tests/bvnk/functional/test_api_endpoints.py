@@ -9,6 +9,7 @@ import requests
 from assertpy import assert_that
 from config.settings import settings
 
+
 @pytest.mark.bvnk
 @pytest.mark.functional
 def test_authentication_echo(bvnk_api, print_test_header):
@@ -27,7 +28,7 @@ def test_authentication_echo(bvnk_api, print_test_header):
     response = bvnk_api.echo(test_payload)
     print(f"Echo response: {response}")
 
-    # Verify response structure (use actual field names from response)
+    # Verify response structure (use actual field names)
     assert_that(response).contains_key('auth_token_expiry_time')  # Changed from 'expiry'
     assert_that(response).contains_key('request_payload')
 
@@ -35,34 +36,36 @@ def test_authentication_echo(bvnk_api, print_test_header):
     echoed_payload = response['request_payload']
     assert_that(echoed_payload).is_equal_to(test_payload)
 
-    print("\nTEST PASSED: Authentication working correctly")
+    print("\n TEST PASSED: Authentication working correctly")
+
 
 # @pytest.mark.bvnk
 # @pytest.mark.functional
-# def test_authentication_echo(bvnk_api):
+# def test_authentication_echo(bvnk_api, print_test_header):
 #     """
-#     Test: Verify authentication with echo endpoint
+#     Test that authentication works correctly with the echo endpoint
 #     """
-#     print("\n" + "="*60)
-#     print("TEST: Authentication Echo")
-#     print("="*60)
+#     print_test_header("Authentication Echo")
 #
-#     # Test with payload
+#     # Create test payload
 #     test_payload = {
 #         'test_key': 'test_value',
 #         'number': 123
 #     }
 #
+#     # Call echo endpoint
 #     response = bvnk_api.echo(test_payload)
-#
 #     print(f"Echo response: {response}")
 #
-#     # Assertions
-#     assert_that(response).contains_key('expiry')
-#     assert_that(response).contains_key('content')
-#     assert_that(response['content']).is_equal_to(test_payload)
+#     # Verify response structure (use actual field names from response)
+#     assert_that(response).contains_key('auth_token_expiry_time')  # Changed from 'expiry'
+#     assert_that(response).contains_key('request_payload')
 #
-#     print(" TEST PASSED: Authentication working correctly")
+#     # Verify payload was echoed back
+#     echoed_payload = response['request_payload']
+#     assert_that(echoed_payload).is_equal_to(test_payload)
+#
+#     print("\nTEST PASSED: Authentication working correctly")
 
 
 @pytest.mark.bvnk
@@ -71,9 +74,9 @@ def test_list_all_wallets(bvnk_api):
     """
     Test: Verify wallet listing functionality
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: List All Wallets")
-    print("="*60)
+    print("=" * 60)
 
     wallets = bvnk_api.list_wallets()
 
@@ -97,9 +100,9 @@ def test_quote_expiry(bvnk_api):
     """
     Test: Verify quote expires after 20 seconds
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Quote Expiry")
-    print("="*60)
+    print("=" * 60)
 
     # Create quote
     quote = bvnk_api.create_quote('ETH', 'TRX', 0.1)
@@ -124,34 +127,39 @@ def test_quote_expiry(bvnk_api):
 
 @pytest.mark.bvnk
 @pytest.mark.functional
-def test_insufficient_balance(bvnk_api):
+def test_insufficient_balance(bvnk_api, print_test_header):
     """
-    Test: Verify handling of insufficient balance
+    Test that system rejects conversions with insufficient balance
     """
-    print("\n" + "="*60)
-    print("TEST: Insufficient Balance")
-    print("="*60)
+    print_test_header("Insufficient Balance")
 
-    # Get current balance
+    # Get wallets
     wallets = bvnk_api.list_wallets()
-    eth_wallet = next((w for w in wallets if w['currency'] == 'ETH'), None)
-    current_balance = float(eth_wallet['balance'])
 
+    # Use the helper function correctly
+    from utils.bvnk.helpers import get_wallet_by_currency
+    eth_wallet = get_wallet_by_currency(wallets, 'ETH')
+
+    assert_that(eth_wallet).is_not_none()
+
+    # Get current balance (it's a string, convert to float)
+    current_balance = float(eth_wallet['balance'])
     print(f"Current ETH balance: {current_balance}")
 
-    # Try to create quote for more than available
-    excessive_amount = current_balance + 1000
+    # Try to convert more than available
+    excessive_amount = current_balance + 1000.0
+    print(f"Attempting to convert {excessive_amount} ETH (more than balance)")
 
+    # This should fail
     try:
         quote = bvnk_api.create_quote('ETH', 'TRX', excessive_amount)
-        # If quote is created, try to accept it
         bvnk_api.accept_quote(quote['uuid'])
-        pytest.fail("Expected insufficient balance error")
+        pytest.fail("Should have rejected insufficient balance")
     except requests.exceptions.HTTPError as e:
-        print(f"Correctly rejected: {e}")
-        assert_that(e.response.status_code).is_in(400, 402, 422)
+        print(f" Correctly rejected: {e.response.status_code}")
+        assert_that(e.response.status_code).is_in(400, 422)  # Bad request or unprocessable
 
-    print(" TEST PASSED: Insufficient balance handled correctly")
+    print("\n TEST PASSED: Insufficient balance correctly rejected")
 
 
 @pytest.mark.bvnk
@@ -160,9 +168,9 @@ def test_service_fee_calculation(bvnk_api):
     """
     Test: Verify service fee is calculated correctly (0.01%)
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Service Fee Calculation")
-    print("="*60)
+    print("=" * 60)
 
     # Get initial balance
     initial_wallets = bvnk_api.list_wallets()

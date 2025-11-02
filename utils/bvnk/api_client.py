@@ -48,7 +48,7 @@ class BVNKApiClient:
 
         print(f"Response from /init: {data}")
 
-        # Extract access_token from response (API returns 'access_token')
+        # Extract access_token from response (API returns 'access_token', not 'token')
         token = data.get('access_token')
 
         if not token:
@@ -62,7 +62,7 @@ class BVNKApiClient:
             'Authorization': f'Bearer {self.bearer_token}'
         })
 
-        print(f"✅ Account initialized successfully!")
+        print(f" Account initialized successfully!")
         print(f"Token: {self.bearer_token[:20]}..." if len(self.bearer_token) > 20 else f"Token: {self.bearer_token}")
         print(f"Token expiry (timestamp): {data.get('expiry', 'Not provided')}")
 
@@ -122,15 +122,60 @@ class BVNKApiClient:
         Returns:
             Dict containing quote details including UUID
         """
+        # First, get wallets to find wallet IDs
+        wallets = self.list_wallets()
+
+        # Find wallet IDs for the currencies
+        from_wallet_id = None
+        to_wallet_id = None
+
+        for wallet in wallets:
+            currency_obj = wallet.get('currency', {})
+            code = currency_obj.get('code', '')
+
+            if code == from_currency:
+                from_wallet_id = wallet.get('id')
+            elif code == to_currency:
+                to_wallet_id = wallet.get('id')
+
+        if not from_wallet_id:
+            raise ValueError(f"Wallet not found for currency: {from_currency}")
+        if not to_wallet_id:
+            raise ValueError(f"Wallet not found for currency: {to_currency}")
+
+        print(f"\nCreating quote:")
+        print(f"  From: {from_currency} (wallet ID: {from_wallet_id})")
+        print(f"  To: {to_currency} (wallet ID: {to_wallet_id})")
+        print(f"  Amount: {amount}")
+
+        # Build payload according to API schema
         payload = {
             'from': from_currency,
             'to': to_currency,
-            'amount': amount
+            'fromWallet': from_wallet_id,
+            'toWallet': to_wallet_id,
+            'useMaximum': False,
+            'useMinimum': False,
+            'reference': f'conversion-{from_currency}-to-{to_currency}',
+            'amountIn': amount,      # Changed from 'amount' to 'amountIn'
+            'amountOut': 0,          # Added amountOut (0 when using amountIn)
+            'payInMethod': 'balance',
+            'payOutMethod': 'balance'
         }
+
+        print(f"Payload: {payload}")
+
         response = self.session.post(
             f"{self.base_url}/api/v1/quote",
             json=payload
         )
+
+        # Print error details if request fails
+        if not (200 <= response.status_code < 300):  # Changed: Accept all 2xx as success
+            print(f"\n Error creating quote:")
+            print(f"  Status: {response.status_code}")
+            print(f"  Response: {response.text}")
+
         response.raise_for_status()
         return response.json()
 

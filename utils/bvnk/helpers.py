@@ -16,19 +16,17 @@ def get_wallet_balance(wallets: List[Dict], currency: str) -> float:
         Balance as float, or 0.0 if not found
     """
     for wallet in wallets:
-        # Check if this is the right wallet by currency code
-        if wallet.get('code') == currency or wallet.get('currency') == currency:
-            # Try different possible balance field names
-            balance = wallet.get('balance') or wallet.get('amount') or wallet.get('value') or 0.0
+        # Currency is nested inside a 'currency' object
+        currency_obj = wallet.get('currency', {})
+        wallet_code = currency_obj.get('code', '')
 
-            # Handle string balances
-            if isinstance(balance, str):
-                try:
-                    return float(balance)
-                except (ValueError, TypeError):
-                    return 0.0
-
-            return float(balance) if balance else 0.0
+        if wallet_code == currency:
+            # Balance is a string, need to convert to float
+            balance_str = wallet.get('balance', '0')
+            try:
+                return float(balance_str)
+            except (ValueError, TypeError):
+                return 0.0
 
     return 0.0
 
@@ -45,8 +43,13 @@ def get_wallet_by_currency(wallets: List[Dict], currency: str) -> Optional[Dict]
         Wallet dict or None if not found
     """
     for wallet in wallets:
-        if wallet.get('code') == currency or wallet.get('currency') == currency:
+        # Currency is nested inside a 'currency' object
+        currency_obj = wallet.get('currency', {})
+        wallet_code = currency_obj.get('code', '')
+
+        if wallet_code == currency:
             return wallet
+
     return None
 
 
