@@ -8,7 +8,6 @@ from assertpy import assert_that
 from utils.bvnk.helpers import get_wallet_balance, calculate_expected_fee
 from config.settings import settings
 
-
 @pytest.mark.bvnk
 @pytest.mark.e2e
 @pytest.mark.smoke
@@ -37,19 +36,28 @@ def test_convert_1_eth_to_trx(bvnk_api, wallet_balances, print_test_header):
 
     print(f"\nQuote created:")
     print(f"  UUID: {quote['uuid']}")
-    print(f"  Price: {quote['price']}")  # Changed from 'rate'
-    print(f"  Amount Out: {quote['amountOut']}")  # Added
-    print(f"  Fee: {quote['fee']}")  # Added
+    print(f"  Price: {quote['price']}")
+    print(f"  Amount Out: {quote['amountOut']}")
+    print(f"  Fee: {quote['fee']}")
 
     # Validate quote
-    assert_that(quote).contains_key('uuid', 'from', 'to', 'amountIn', 'price')  # Changed 'rate' to 'price'
+    assert_that(quote).contains_key('uuid', 'from', 'to', 'amountIn', 'price')
     assert_that(quote['from']).is_equal_to('ETH')
     assert_that(quote['to']).is_equal_to('TRX')
     assert_that(float(quote['amountIn'])).is_equal_to(1.0)
 
-    # Accept quote
+# Accept quote
     accept_response = bvnk_api.accept_quote(quote['uuid'])
     print(f"\nQuote accepted: {accept_response}")
+
+    # ADD THIS: Wait for transaction to complete
+    print(f"\nWaiting for transaction to complete...")
+    try:
+        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
+        print(f"Transaction completed!")
+    except TimeoutError as e:
+        print(f"⚠️ Warning: {e}")
+        print("Proceeding with balance check anyway...")
 
     # Get final balances
     final_wallets = bvnk_api.list_wallets()
@@ -71,6 +79,7 @@ def test_convert_1_eth_to_trx(bvnk_api, wallet_balances, print_test_header):
     assert_that(trx_change).is_greater_than(0)
 
     print("\n TEST PASSED: 1 ETH successfully converted to TRX")
+
 
 @pytest.mark.bvnk
 @pytest.mark.e2e
@@ -110,6 +119,14 @@ def test_convert_420_trx_to_usdt(bvnk_api, wallet_balances, print_test_header):
     # Accept quote
     accept_response = bvnk_api.accept_quote(quote['uuid'])
     print(f"\nQuote accepted: {accept_response}")
+    # Wait for transaction to complete
+    print(f"\nWaiting for transaction to complete...")
+    try:
+        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
+        print(f"Transaction completed!")
+    except TimeoutError as e:
+        print(f"⚠️ Warning: {e}")
+        print("Proceeding with balance check anyway...")
 
     # Get final balances
     final_wallets = bvnk_api.list_wallets()
@@ -169,6 +186,14 @@ def test_convert_987_trx_to_eth(bvnk_api, wallet_balances, print_test_header):
     # Accept quote
     accept_response = bvnk_api.accept_quote(quote['uuid'])
     print(f"\nQuote accepted: {accept_response}")
+
+    print(f"\nWaiting for transaction to complete...")
+    try:
+        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
+        print(f"Transaction completed!")
+    except TimeoutError as e:
+        print(f"⚠️ Warning: {e}")
+        print("Proceeding with balance check anyway...")
 
     # Get final balances
     final_wallets = bvnk_api.list_wallets()

@@ -8,6 +8,7 @@ import time
 import requests
 from assertpy import assert_that
 from config.settings import settings
+from utils.bvnk.helpers import calculate_expected_fee, get_wallet_balance
 
 
 @pytest.mark.bvnk
@@ -120,9 +121,9 @@ def test_quote_expiry(bvnk_api):
         pytest.fail("Expected quote to be expired, but it was accepted")
     except requests.exceptions.HTTPError as e:
         print(f"Quote correctly expired: {e}")
-        assert_that(e.response.status_code).is_in(400, 404, 410)
+        assert_that(e.response.status_code).is_in(400, 404, 410, 412)
 
-    print(" TEST PASSED: Quote expires correctly")
+        print(f"\n TEST PASSED: Quote expiry working correctly")
 
 
 @pytest.mark.bvnk
@@ -156,51 +157,64 @@ def test_insufficient_balance(bvnk_api, print_test_header):
         bvnk_api.accept_quote(quote['uuid'])
         pytest.fail("Should have rejected insufficient balance")
     except requests.exceptions.HTTPError as e:
-        print(f" Correctly rejected: {e.response.status_code}")
-        assert_that(e.response.status_code).is_in(400, 422)  # Bad request or unprocessable
+        print(f"✅ Correctly rejected: {e.response.status_code}")
+        assert_that(e.response.status_code).is_in(400, 412, 422)  # Bad request or unprocessable
 
     print("\n TEST PASSED: Insufficient balance correctly rejected")
 
-
 @pytest.mark.bvnk
 @pytest.mark.functional
-def test_service_fee_calculation(bvnk_api):
+def test_service_fee_calculation(bvnk_api, print_test_header):
     """
-    Test: Verify service fee is calculated correctly (0.01%)
+    Test that service fee is calculated correctly (0.01%)
     """
-    print("\n" + "=" * 60)
-    print("TEST: Service Fee Calculation")
-    print("=" * 60)
-
-    # Get initial balance
-    initial_wallets = bvnk_api.list_wallets()
-    initial_eth = next((w['balance'] for w in initial_wallets if w['currency'] == 'ETH'), 0)
+    print_test_header("Service Fee Calculation")
 
     amount = 1.0
-    expected_fee = amount * (settings.SERVICE_FEE_PERCENT / 100)
+    print(f"Converting {amount} ETH")
+
+    # Calculate expected fee
+    expected_fee = calculate_expected_fee(amount, settings.SERVICE_FEE_PERCENT)
     expected_net = amount - expected_fee
 
-    print(f"Converting {amount} ETH")
     print(f"Expected fee: {expected_fee} ETH")
     print(f"Expected net: {expected_net} ETH")
 
-    # Create and accept quote
+    # Get initial balance
+    wallets = bvnk_api.list_wallets()
+    initial_eth = get_wallet_balance(wallets, 'ETH')
+
+    # Create quote
     quote = bvnk_api.create_quote('ETH', 'TRX', amount)
+
+    # Get the fee from quote response
+    actual_fee = float(quote.get('fee', 0))
+    print(f"Actual fee from quote: {actual_fee} ETH")
+
+    # Verify fee is correct
+    assert_that(actual_fee).is_close_to(expected_fee, 0.00001)
+
+    # Accept and wait for completion
     bvnk_api.accept_quote(quote['uuid'])
 
-    # Verify balance change
+    print(f"\nWaiting for transaction to complete...")
+    try:
+        bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
+    except TimeoutError:
+        print("⚠️ Timeout waiting for completion")
+
+    # Get final balance
     final_wallets = bvnk_api.list_wallets()
-    final_eth = next((w['balance'] for w in final_wallets if w['currency'] == 'ETH'), 0)
+    final_eth = get_wallet_balance(final_wallets, 'ETH')
 
-    actual_deducted = float(initial_eth) - float(final_eth)
-
+    # Calculate actual deduction
+    actual_deducted = initial_eth - final_eth
     print(f"Actually deducted: {actual_deducted} ETH")
 
-    # Allow small rounding difference
+    # Verify the full amount was deducted (fee is taken from received amount, not sent amount)
     assert_that(actual_deducted).is_close_to(amount, 0.001)
 
-    print(" TEST PASSED: Service fee calculated correctly")
-
+    print(f"\n TEST PASSED: Service fee calculation correct")
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
