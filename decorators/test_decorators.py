@@ -1,5 +1,9 @@
 import functools
 import time
+
+import requests
+
+from config import settings
 from utils.logger import Logger
 
 logger = Logger()
