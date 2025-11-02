@@ -37,11 +37,18 @@ def bvnk_api():
     Function-scoped fixture for BVNK API client
     Creates fresh client for each test
     """
+    print("\n" + "="*70)
+    print("Creating new BVNK API client...")
+    print("="*70)
+
+    # Create client (no token yet)
     client = BVNKApiClient()
 
-    # Initialize account
+    # Initialize account and get bearer token
     init_response = client.init_account()
-    print(f"\nTest account created. Token: {init_response.get('token', 'N/A')[:20]}...")
+
+    print(f"\nAccount setup complete!")
+    print("="*70)
 
     yield client
 

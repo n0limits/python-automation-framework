@@ -9,33 +9,60 @@ import requests
 from assertpy import assert_that
 from config.settings import settings
 
-
 @pytest.mark.bvnk
 @pytest.mark.functional
-def test_authentication_echo(bvnk_api):
+def test_authentication_echo(bvnk_api, print_test_header):
     """
-    Test: Verify authentication with echo endpoint
+    Test that authentication works correctly with the echo endpoint
     """
-    print("\n" + "="*60)
-    print("TEST: Authentication Echo")
-    print("="*60)
+    print_test_header("Authentication Echo")
 
-    # Test with payload
+    # Create test payload
     test_payload = {
         'test_key': 'test_value',
         'number': 123
     }
 
+    # Call echo endpoint
     response = bvnk_api.echo(test_payload)
-
     print(f"Echo response: {response}")
 
-    # Assertions
-    assert_that(response).contains_key('expiry')
-    assert_that(response).contains_key('content')
-    assert_that(response['content']).is_equal_to(test_payload)
+    # Verify response structure (use actual field names from response)
+    assert_that(response).contains_key('auth_token_expiry_time')  # Changed from 'expiry'
+    assert_that(response).contains_key('request_payload')
 
-    print(" TEST PASSED: Authentication working correctly")
+    # Verify payload was echoed back
+    echoed_payload = response['request_payload']
+    assert_that(echoed_payload).is_equal_to(test_payload)
+
+    print("\nTEST PASSED: Authentication working correctly")
+
+# @pytest.mark.bvnk
+# @pytest.mark.functional
+# def test_authentication_echo(bvnk_api):
+#     """
+#     Test: Verify authentication with echo endpoint
+#     """
+#     print("\n" + "="*60)
+#     print("TEST: Authentication Echo")
+#     print("="*60)
+#
+#     # Test with payload
+#     test_payload = {
+#         'test_key': 'test_value',
+#         'number': 123
+#     }
+#
+#     response = bvnk_api.echo(test_payload)
+#
+#     print(f"Echo response: {response}")
+#
+#     # Assertions
+#     assert_that(response).contains_key('expiry')
+#     assert_that(response).contains_key('content')
+#     assert_that(response['content']).is_equal_to(test_payload)
+#
+#     print(" TEST PASSED: Authentication working correctly")
 
 
 @pytest.mark.bvnk

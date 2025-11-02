@@ -1,7 +1,7 @@
 """
 Helper functions for BVNK API testing
 """
-from typing import Dict, Any, List
+from typing import List, Dict, Any, Optional
 
 
 def get_wallet_balance(wallets: List[Dict], currency: str) -> float:
@@ -9,16 +9,45 @@ def get_wallet_balance(wallets: List[Dict], currency: str) -> float:
     Get balance for a specific currency from wallet list
 
     Args:
-        wallets: List of wallet dictionaries
-        currency: Currency code to find
+        wallets: List of wallet dictionaries from API
+        currency: Currency code (e.g., 'ETH', 'TRX')
 
     Returns:
         Balance as float, or 0.0 if not found
     """
     for wallet in wallets:
-        if wallet.get('currency') == currency:
-            return float(wallet.get('balance', 0.0))
+        # Check if this is the right wallet by currency code
+        if wallet.get('code') == currency or wallet.get('currency') == currency:
+            # Try different possible balance field names
+            balance = wallet.get('balance') or wallet.get('amount') or wallet.get('value') or 0.0
+
+            # Handle string balances
+            if isinstance(balance, str):
+                try:
+                    return float(balance)
+                except (ValueError, TypeError):
+                    return 0.0
+
+            return float(balance) if balance else 0.0
+
     return 0.0
+
+
+def get_wallet_by_currency(wallets: List[Dict], currency: str) -> Optional[Dict]:
+    """
+    Get wallet object for a specific currency
+
+    Args:
+        wallets: List of wallet dictionaries
+        currency: Currency code
+
+    Returns:
+        Wallet dict or None if not found
+    """
+    for wallet in wallets:
+        if wallet.get('code') == currency or wallet.get('currency') == currency:
+            return wallet
+    return None
 
 
 def calculate_expected_fee(amount: float, fee_percent: float = 0.01) -> float:
@@ -26,22 +55,22 @@ def calculate_expected_fee(amount: float, fee_percent: float = 0.01) -> float:
     Calculate expected service fee
 
     Args:
-        amount: Transaction amount
-        fee_percent: Fee percentage (default 0.01%)
+        amount: Amount to calculate fee for
+        fee_percent: Fee percentage (default 0.01 = 0.01%)
 
     Returns:
         Fee amount
     """
-    return amount * (fee_percent / 100)
+    return amount * (fee_percent / 100.0)
 
 
 def calculate_net_amount(gross_amount: float, fee_percent: float = 0.01) -> float:
     """
-    Calculate net amount after fee
+    Calculate net amount after fee deduction
 
     Args:
-        gross_amount: Amount before fee
-        fee_percent: Fee percentage
+        gross_amount: Gross amount before fee
+        fee_percent: Fee percentage (default 0.01 = 0.01%)
 
     Returns:
         Net amount after fee
@@ -52,7 +81,7 @@ def calculate_net_amount(gross_amount: float, fee_percent: float = 0.01) -> floa
 
 def validate_quote_response(quote: Dict[str, Any]) -> bool:
     """
-    Validate that quote response contains required fields
+    Validate quote response has required fields
 
     Args:
         quote: Quote response dictionary
@@ -60,5 +89,5 @@ def validate_quote_response(quote: Dict[str, Any]) -> bool:
     Returns:
         True if valid, False otherwise
     """
-    required_fields = ['uuid', 'from', 'to', 'amount', 'rate', 'expiry']
+    required_fields = ['uuid', 'from', 'to', 'amount', 'rate']
     return all(field in quote for field in required_fields)

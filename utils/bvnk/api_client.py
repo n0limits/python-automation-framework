@@ -14,36 +14,57 @@ class BVNKApiClient:
         Initialize BVNK API Client
 
         Args:
-            bearer_token: Bearer token for authentication
+            bearer_token: Bearer token for authentication (optional, will be obtained from /init)
         """
         self.base_url = settings.BVNK_API_BASE_URL
-        self.bearer_token = bearer_token or settings.BVNK_BEARER_TOKEN
+        self.bearer_token = bearer_token
         self.session = requests.Session()
 
+        # Set default headers (without auth initially)
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+
+        # Only add auth header if token is provided
         if self.bearer_token:
             self.session.headers.update({
-                'Authorization': f'Bearer {self.bearer_token}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Authorization': f'Bearer {self.bearer_token}'
             })
 
     def init_account(self) -> Dict[str, Any]:
         """
-        Initialize a new simulated account
+        Initialize a new simulated account and get bearer token
 
         Returns:
             Dict containing bearer token and account info
         """
+        print("\nInitializing BVNK account...")
+
+        # Call /init endpoint (no auth required for this endpoint)
         response = self.session.get(f"{self.base_url}/init")
         response.raise_for_status()
         data = response.json()
 
-        # Update bearer token
-        if 'token' in data:
-            self.bearer_token = data['token']
-            self.session.headers.update({
-                'Authorization': f'Bearer {self.bearer_token}'
-            })
+        print(f"Response from /init: {data}")
+
+        # Extract access_token from response (API returns 'access_token')
+        token = data.get('access_token')
+
+        if not token:
+            raise ValueError(f"No access_token found in /init response. Response: {data}")
+
+        # Store token
+        self.bearer_token = token
+
+        # Update session headers with authentication
+        self.session.headers.update({
+            'Authorization': f'Bearer {self.bearer_token}'
+        })
+
+        print(f"✅ Account initialized successfully!")
+        print(f"Token: {self.bearer_token[:20]}..." if len(self.bearer_token) > 20 else f"Token: {self.bearer_token}")
+        print(f"Token expiry (timestamp): {data.get('expiry', 'Not provided')}")
 
         return data
 
@@ -64,12 +85,12 @@ class BVNKApiClient:
         response.raise_for_status()
         return response.json()
 
-    def list_wallets(self) -> Dict[str, Any]:
+    def list_wallets(self) -> list:
         """
         List all wallets associated with the account
 
         Returns:
-            Dict containing list of wallets
+            List of wallet dictionaries
         """
         response = self.session.get(f"{self.base_url}/api/wallet")
         response.raise_for_status()
