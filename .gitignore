@@ -110,6 +110,7 @@ test-results/
 secrets/
 credentials/
 *.credentials
+.claude/
 
 # Large files
 *.apk

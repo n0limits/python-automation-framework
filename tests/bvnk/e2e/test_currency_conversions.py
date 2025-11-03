@@ -122,7 +122,7 @@ def test_convert_420_trx_to_usdt(bvnk_api, wallet_balances, print_test_header):
     # Wait for transaction to complete
     print(f"\nWaiting for transaction to complete...")
     try:
-        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
+        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=20)
         print(f"Transaction completed!")
     except TimeoutError as e:
         print(f"⚠️ Warning: {e}")

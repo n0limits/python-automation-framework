@@ -212,24 +212,23 @@ class BVNKApiClient:
         response.raise_for_status()
         return response.json()
 
-    def wait_for_quote_completion(self, quote_uuid: str, timeout: int = 30, poll_interval: int = 2) -> Dict[str, Any]:
+# TODO change poll_interval from 2 to 1 - optimisation + parralel execution with xdist
+    def wait_for_quote_completion(self, quote_uuid: str, timeout: int = 30, initial_poll_interval: float = 0.5) -> Dict[str, Any]:
         """
-        Wait for a quote to complete processing
+        Wait for a quote to complete processing with exponential backoff
 
         Args:
             quote_uuid: UUID of the quote to wait for
             timeout: Maximum time to wait in seconds (default: 30)
-            poll_interval: Time between status checks in seconds (default: 2)
+            initial_poll_interval: Starting interval in seconds (default: 0.5)
 
         Returns:
             Final quote status dict
-
-        Raises:
-            TimeoutError: If quote doesn't complete within timeout
-            ValueError: If transaction fails
         """
         start_time = time.time()
         elapsed = 0
+        poll_interval = initial_poll_interval
+        max_poll_interval = 3.0
 
         print(f"\nWaiting for transaction to complete (timeout: {timeout}s)...")
 
@@ -240,8 +239,8 @@ class BVNKApiClient:
 
             print(f"  [{int(elapsed)}s] Quote: {quote_status}, Payment: {payment_status}")
 
-            # Check if completed - ADD 'SUCCESS' HERE
-            if payment_status in ['COMPLETE', 'COMPLETED', 'PAID', 'SUCCESS']:  # ← Added 'SUCCESS'
+            # Check if completed
+            if payment_status in ['COMPLETE', 'COMPLETED', 'PAID', 'SUCCESS']:
                 print(f" Transaction completed after {int(elapsed)}s!")
                 return quote
 
@@ -252,15 +251,68 @@ class BVNKApiClient:
                     f"Transaction failed: Quote status={quote_status}, Payment status={payment_status}"
                 )
 
-            # Wait before next check
+            # Wait with exponential backoff
             time.sleep(poll_interval)
             elapsed = time.time() - start_time
 
-        # Timeout reached
+            # Increase poll interval (exponential backoff)
+            poll_interval = min(poll_interval * 1.5, max_poll_interval)
+
         raise TimeoutError(
             f"Quote {quote_uuid} did not complete within {timeout} seconds. "
             f"Last status - Quote: {quote_status}, Payment: {payment_status}"
         )
+
+    #
+    # def wait_for_quote_completion(self, quote_uuid: str, timeout: int = 30, poll_interval: int = 1) -> Dict[str, Any]:
+    #     """
+    #     Wait for a quote to complete processing
+    #
+    #     Args:
+    #         quote_uuid: UUID of the quote to wait for
+    #         timeout: Maximum time to wait in seconds (default: 30)
+    #         poll_interval: Time between status checks in seconds (default: 2)
+    #
+    #     Returns:
+    #         Final quote status dict
+    #
+    #     Raises:
+    #         TimeoutError: If quote doesn't complete within timeout
+    #         ValueError: If transaction fails
+    #     """
+    #     start_time = time.time()
+    #     elapsed = 0
+    #
+    #     print(f"\nWaiting for transaction to complete (timeout: {timeout}s)...")
+    #
+    #     while elapsed < timeout:
+    #         quote = self.get_quote(quote_uuid)
+    #         payment_status = quote.get('paymentStatus', '')
+    #         quote_status = quote.get('quoteStatus', '')
+    #
+    #         print(f"  [{int(elapsed)}s] Quote: {quote_status}, Payment: {payment_status}")
+    #
+    #         # Check if completed - ADD 'SUCCESS' HERE
+    #         if payment_status in ['COMPLETE', 'COMPLETED', 'PAID', 'SUCCESS']:  # ← Added 'SUCCESS'
+    #             print(f" Transaction completed after {int(elapsed)}s!")
+    #             return quote
+    #
+    #         # Check if failed
+    #         if payment_status in ['FAILED', 'CANCELLED', 'EXPIRED'] or \
+    #                 quote_status in ['FAILED', 'CANCELLED', 'EXPIRED', 'REJECTED']:
+    #             raise ValueError(
+    #                 f"Transaction failed: Quote status={quote_status}, Payment status={payment_status}"
+    #             )
+    #
+    #         # Wait before next check
+    #         time.sleep(poll_interval)
+    #         elapsed = time.time() - start_time
+    #
+    #     # Timeout reached
+    #     raise TimeoutError(
+    #         f"Quote {quote_uuid} did not complete within {timeout} seconds. "
+    #         f"Last status - Quote: {quote_status}, Payment: {payment_status}"
+    #     )
 
     def close(self):
         """Close the session"""

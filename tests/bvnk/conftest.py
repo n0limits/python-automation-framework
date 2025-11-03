@@ -3,6 +3,8 @@ BVNK tests conftest.py - BVNK-specific fixtures and configuration
 Provides fixtures specifically for BVNK API testing
 """
 import pytest
+
+from utils.bvnk.api_client import BVNKApiClient
 from utils.bvnk.helpers import get_wallet_balance, calculate_expected_fee
 from config.settings import settings
 
@@ -205,6 +207,27 @@ def print_test_header():
 
     return _print_header
 
+# use when I need the same session - can save time, but will reuse the token - for example in test_api_endpoints.py:
+# def test_authentication_echo(bvnk_session_client, print_test_header)
+@pytest.fixture(scope="session")
+def bvnk_session_client():
+    """
+    Session-scoped fixture for BVNK API client
+    Reuses same account for all tests (faster but less isolated)
+    """
+    print("\n" + "="*70)
+    print("Creating session BVNK API client...")
+    print("="*70)
+
+    client = BVNKApiClient()
+    init_response = client.init_account()
+
+    print(f"\nSession account setup complete!")
+    print("="*70)
+
+    yield client
+
+    client.close()
 
 # ============================================
 # BVNK Test Configuration Hooks
