@@ -1,84 +1,59 @@
 """
 End-to-End tests for BVNK currency conversions
-As per assignment requirements
+
+These tests follow the AAA pattern:
+- Arrange: Setup test data and helper
+- Act: Execute conversion
+- Assert: Verify balance changes
 """
 import pytest
-import time
-from assertpy import assert_that
-from utils.bvnk.helpers import get_wallet_balance, calculate_expected_fee
-from config.settings import settings
+from utils.bvnk.conversion_helper import ConversionTestHelper
+from utils.bvnk.test_data import CONVERSION_TEST_CASES
+
 
 @pytest.mark.bvnk
 @pytest.mark.e2e
 @pytest.mark.smoke
 def test_convert_1_eth_to_trx(bvnk_api, wallet_balances, print_test_header):
     """
-    E2E Test: Convert/trade 1 ETH for TRX
+    E2E Test: Convert 1 ETH to TRX
+
+    Verifies:
+    - Quote creation and acceptance
+    - Transaction completion
+    - Correct balance changes
     """
-    print_test_header("Convert 1 ETH to TRX")
+    # === ARRANGE ===
+    test_case = CONVERSION_TEST_CASES['eth_to_trx']
+    print_test_header(test_case.test_name)
 
-    # Get initial balances
-    initial_eth = wallet_balances['ETH']
-    initial_trx = wallet_balances['TRX']
+    helper = ConversionTestHelper(bvnk_api)
 
-    print(f"Initial ETH balance: {initial_eth}")
-    print(f"Initial TRX balance: {initial_trx}")
+    print(f"Initial {test_case.from_currency} balance: {wallet_balances[test_case.from_currency]}")
+    print(f"Initial {test_case.to_currency} balance: {wallet_balances[test_case.to_currency]}")
 
-    # Verify sufficient balance
-    assert_that(initial_eth).is_greater_than_or_equal_to(1.0)
-
-    # Create quote
-    quote = bvnk_api.create_quote(
-        from_currency='ETH',
-        to_currency='TRX',
-        amount=1.0
+    helper.verify_sufficient_balance(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.amount
     )
 
-    print(f"\nQuote created:")
-    print(f"  UUID: {quote['uuid']}")
-    print(f"  Price: {quote['price']}")
-    print(f"  Amount Out: {quote['amountOut']}")
-    print(f"  Fee: {quote['fee']}")
+    # === ACT ===
+    conversion_result = helper.execute_conversion(
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-    # Validate quote
-    assert_that(quote).contains_key('uuid', 'from', 'to', 'amountIn', 'price')
-    assert_that(quote['from']).is_equal_to('ETH')
-    assert_that(quote['to']).is_equal_to('TRX')
-    assert_that(float(quote['amountIn'])).is_equal_to(1.0)
+    # === ASSERT ===
+    helper.verify_balance_changes(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-# Accept quote
-    accept_response = bvnk_api.accept_quote(quote['uuid'])
-    print(f"\nQuote accepted: {accept_response}")
-
-    # ADD THIS: Wait for transaction to complete
-    print(f"\nWaiting for transaction to complete...")
-    try:
-        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
-        print(f"Transaction completed!")
-    except TimeoutError as e:
-        print(f"⚠️ Warning: {e}")
-        print("Proceeding with balance check anyway...")
-
-    # Get final balances
-    final_wallets = bvnk_api.list_wallets()
-    final_eth = get_wallet_balance(final_wallets, 'ETH')
-    final_trx = get_wallet_balance(final_wallets, 'TRX')
-
-    print(f"\nFinal ETH balance: {final_eth}")
-    print(f"Final TRX balance: {final_trx}")
-
-    # Verify balances changed
-    eth_change = initial_eth - final_eth
-    trx_change = final_trx - initial_trx
-
-    print(f"\nBalance changes:")
-    print(f"  ETH decreased by: {eth_change}")
-    print(f"  TRX increased by: {trx_change}")
-
-    assert_that(eth_change).is_close_to(1.0, 0.0001)
-    assert_that(trx_change).is_greater_than(0)
-
-    print("\n TEST PASSED: 1 ETH successfully converted to TRX")
+    print(f"\n TEST PASSED: {test_case.test_name}")
 
 
 @pytest.mark.bvnk
@@ -86,68 +61,44 @@ def test_convert_1_eth_to_trx(bvnk_api, wallet_balances, print_test_header):
 @pytest.mark.smoke
 def test_convert_420_trx_to_usdt(bvnk_api, wallet_balances, print_test_header):
     """
-    E2E Test: Convert/trade 420 TRX for USDT
+    E2E Test: Convert 420 TRX to USDT
+
+    Verifies:
+    - Quote creation and acceptance
+    - Transaction completion
+    - Correct balance changes
     """
-    print_test_header("Convert 420 TRX to USDT")
+    # === ARRANGE ===
+    test_case = CONVERSION_TEST_CASES['trx_to_usdt']
+    print_test_header(test_case.test_name)
 
-    # Get initial balances
-    initial_trx = wallet_balances['TRX']
-    initial_usdt = wallet_balances['USDT']
+    helper = ConversionTestHelper(bvnk_api)
 
-    print(f"Initial TRX balance: {initial_trx}")
-    print(f"Initial USDT balance: {initial_usdt}")
+    print(f"Initial {test_case.from_currency} balance: {wallet_balances[test_case.from_currency]}")
+    print(f"Initial {test_case.to_currency} balance: {wallet_balances[test_case.to_currency]}")
 
-    # Verify sufficient balance
-    assert_that(initial_trx).is_greater_than_or_equal_to(420.0)
-
-    # Create quote
-    quote = bvnk_api.create_quote(
-        from_currency='TRX',
-        to_currency='USDT',
-        amount=420.0
+    helper.verify_sufficient_balance(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.amount
     )
 
-    print(f"\nQuote created:")
-    print(f"  UUID: {quote['uuid']}")
-    print(f"  Price: {quote['price']}")  # Changed from 'rate'
+    # === ACT ===
+    conversion_result = helper.execute_conversion(
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-    # Validate quote
-    assert_that(quote).contains_key('uuid', 'price')  # Changed 'rate' to 'price'
-    assert_that(quote['from']).is_equal_to('TRX')
-    assert_that(quote['to']).is_equal_to('USDT')
+    # === ASSERT ===
+    helper.verify_balance_changes(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-    # Accept quote
-    accept_response = bvnk_api.accept_quote(quote['uuid'])
-    print(f"\nQuote accepted: {accept_response}")
-    # Wait for transaction to complete
-    print(f"\nWaiting for transaction to complete...")
-    try:
-        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=20)
-        print(f"Transaction completed!")
-    except TimeoutError as e:
-        print(f"⚠️ Warning: {e}")
-        print("Proceeding with balance check anyway...")
-
-    # Get final balances
-    final_wallets = bvnk_api.list_wallets()
-    final_trx = get_wallet_balance(final_wallets, 'TRX')
-    final_usdt = get_wallet_balance(final_wallets, 'USDT')
-
-    print(f"\nFinal TRX balance: {final_trx}")
-    print(f"Final USDT balance: {final_usdt}")
-
-    # Verify balances
-    trx_change = initial_trx - final_trx
-    usdt_change = final_usdt - initial_usdt
-
-    print(f"\nBalance changes:")
-    print(f"  TRX decreased by: {trx_change}")
-    print(f"  USDT increased by: {usdt_change}")
-
-    assert_that(trx_change).is_close_to(420.0, 0.0001)
-    assert_that(usdt_change).is_greater_than(0)
-
-    print("\n TEST PASSED: 420 TRX successfully converted to USDT")
+    print(f"\n TEST PASSED: {test_case.test_name}")
 
 
 @pytest.mark.bvnk
@@ -155,66 +106,44 @@ def test_convert_420_trx_to_usdt(bvnk_api, wallet_balances, print_test_header):
 @pytest.mark.smoke
 def test_convert_987_trx_to_eth(bvnk_api, wallet_balances, print_test_header):
     """
-    E2E Test: Convert/trade 987 TRX for ETH
+    E2E Test: Convert 987 TRX to ETH
+
+    Verifies:
+    - Quote creation and acceptance
+    - Transaction completion
+    - Correct balance changes
     """
-    print_test_header("Convert 987 TRX to ETH")
+    # === ARRANGE ===
+    test_case = CONVERSION_TEST_CASES['trx_to_eth']
+    print_test_header(test_case.test_name)
 
-    # Get initial balances
-    initial_trx = wallet_balances['TRX']
-    initial_eth = wallet_balances['ETH']
+    helper = ConversionTestHelper(bvnk_api)
 
-    print(f"Initial TRX balance: {initial_trx}")
-    print(f"Initial ETH balance: {initial_eth}")
+    print(f"Initial {test_case.from_currency} balance: {wallet_balances[test_case.from_currency]}")
+    print(f"Initial {test_case.to_currency} balance: {wallet_balances[test_case.to_currency]}")
 
-    # Verify sufficient balance
-    assert_that(initial_trx).is_greater_than_or_equal_to(987.0)
-
-    # Create quote
-    quote = bvnk_api.create_quote(
-        from_currency='TRX',
-        to_currency='ETH',
-        amount=987.0
+    helper.verify_sufficient_balance(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.amount
     )
 
-    print(f"\nQuote created:")
-    print(f"  UUID: {quote['uuid']}")
-    print(f"  Price: {quote['price']}")  # Changed from 'rate'
+    # === ACT ===
+    conversion_result = helper.execute_conversion(
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-    # Validate quote
-    assert_that(quote).contains_key('uuid', 'price')  # Changed 'rate' to 'price'
+    # === ASSERT ===
+    helper.verify_balance_changes(
+        wallet_balances,
+        test_case.from_currency,
+        test_case.to_currency,
+        test_case.amount
+    )
 
-    # Accept quote
-    accept_response = bvnk_api.accept_quote(quote['uuid'])
-    print(f"\nQuote accepted: {accept_response}")
-
-    print(f"\nWaiting for transaction to complete...")
-    try:
-        final_quote = bvnk_api.wait_for_quote_completion(quote['uuid'], timeout=30)
-        print(f"Transaction completed!")
-    except TimeoutError as e:
-        print(f"⚠️ Warning: {e}")
-        print("Proceeding with balance check anyway...")
-
-    # Get final balances
-    final_wallets = bvnk_api.list_wallets()
-    final_trx = get_wallet_balance(final_wallets, 'TRX')
-    final_eth = get_wallet_balance(final_wallets, 'ETH')
-
-    print(f"\nFinal TRX balance: {final_trx}")
-    print(f"Final ETH balance: {final_eth}")
-
-    # Verify balances
-    trx_change = initial_trx - final_trx
-    eth_change = final_eth - initial_eth
-
-    print(f"\nBalance changes:")
-    print(f"  TRX decreased by: {trx_change}")
-    print(f"  ETH increased by: {eth_change}")
-
-    assert_that(trx_change).is_close_to(987.0, 0.0001)
-    assert_that(eth_change).is_greater_than(0)
-
-    print("\n TEST PASSED: 987 TRX successfully converted to ETH")
+    print(f"\n TEST PASSED: {test_case.test_name}")
 
 
 if __name__ == '__main__':

@@ -53,30 +53,41 @@ def get_wallet_by_currency(wallets: List[Dict], currency: str) -> Optional[Dict]
     return None
 
 
-def calculate_expected_fee(amount: float, fee_percent: float = 0.01) -> float:
+def calculate_expected_fee(amount: float, fee_percent: float = 0.0001) -> float:
     """
     Calculate expected service fee
 
+    Service fee for all conversions/trades is 0.01%
+
     Args:
         amount: Amount to calculate fee for
-        fee_percent: Fee percentage (default 0.01 = 0.01%)
+        fee_percent: Fee percentage as decimal (0.0001 = 0.01%)
 
     Returns:
         Fee amount
+
+    Example:
+        calculate_expected_fee(100, 0.0001) = 0.01  (0.01% of 100)
+        calculate_expected_fee(1.0, 0.0001) = 0.0001  (0.01% of 1.0)
     """
-    return amount * (fee_percent / 100.0)
+    return amount * fee_percent
 
 
-def calculate_net_amount(gross_amount: float, fee_percent: float = 0.01) -> float:
+def calculate_net_amount(gross_amount: float, fee_percent: float = 0.0001) -> float:
     """
     Calculate net amount after fee deduction
 
+    Service fee for all conversions/trades is 0.01%
+
     Args:
         gross_amount: Gross amount before fee
-        fee_percent: Fee percentage (default 0.01 = 0.01%)
+        fee_percent: Fee percentage as decimal (0.0001 = 0.01%)
 
     Returns:
         Net amount after fee
+
+    Example:
+        calculate_net_amount(100, 0.0001) = 99.99  (100 - 0.01% fee)
     """
     fee = calculate_expected_fee(gross_amount, fee_percent)
     return gross_amount - fee
@@ -92,5 +103,5 @@ def validate_quote_response(quote: Dict[str, Any]) -> bool:
     Returns:
         True if valid, False otherwise
     """
-    required_fields = ['uuid', 'from', 'to', 'amount', 'rate']
+    required_fields = ['uuid', 'from', 'to', 'amountIn', 'price']
     return all(field in quote for field in required_fields)
