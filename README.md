@@ -369,7 +369,7 @@ Note: iOS testing requires macOS with Xcode
 
 ---
 
-## Assignment Requirements
+## Assignment Requirements - Test Organization
 
 ### Mandatory E2E Tests (3)
 
@@ -414,6 +414,25 @@ Note: iOS testing requires macOS with Xcode
     - File: `tests/bvnk/functional/test_api_endpoints.py`
     - Function: `test_service_fee_calculation`
     - Validates: 0.01% service fee is correctly applied
+
+### Verification Tests (6 tests)
+**Location:** `tests/bvnk/verification/test_verification.py`
+
+Debug and exploration tests (skipped by default):
+- `test_debug_wallet_structure` - Explore wallet API response
+- `test_debug_quote_api` - Test quote payload formats
+- `test_init_endpoint_directly` - Verify init endpoint
+- `test_complete_api_flow` - Test full workflow
+- `test_verify_api_response_structures` - Document API structures
+- `test_verify_error_responses` - Test error handling
+
+**Run verification tests manually:**
+```bash
+# All verification tests
+pytest tests/bvnk/verification/test_verification.py -v -s
+
+# Specific test
+pytest tests/bvnk/verification/test_verification.py::test_debug_wallet_structure -v -s
 
 ---
 
@@ -461,6 +480,11 @@ python-automation-framework/
 │   │   └── test_currency_conversions.py     # 3 E2E conversion tests
 │   └── functional/
 │       └── test_api_endpoints.py            # 5 functional tests
+│   └── verification/
+        ├── __init__.py                     # NEW
+        ├── conftest.py                     # NEW
+│       └── test_verification.py             # 6 verification tests
+│
 │
 ├── utils/bvnk/                              # BVNK utilities
 │   ├── api_client.py                        # API client wrapper
