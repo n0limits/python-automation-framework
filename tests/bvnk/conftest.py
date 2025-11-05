@@ -1,21 +1,28 @@
 """
-BVNK tests conftest.py - BVNK-specific fixtures and configuration
-Provides fixtures specifically for BVNK API testing
+BVNK-specific test fixtures
+Provides helper fixtures for BVNK API testing
 """
 import pytest
+import requests
 
 from utils.bvnk.api_client import BVNKApiClient
 from utils.bvnk.helpers import get_wallet_balance, calculate_expected_fee
 from config.settings import settings
 
 
+# ============================================
+# BVNK Helper Fixtures
+# ============================================
+
 @pytest.fixture
 def wallet_balances(bvnk_api):
     """
-    Fixture that provides initial wallet balances
+    Fixture that provides initial wallet balances.
+
+    Retrieves balances at start of test for before/after comparison.
 
     Usage:
-        def test_something(bvnk_api, wallet_balances):
+        def test_conversion(bvnk_api, wallet_balances):
             initial_eth = wallet_balances['ETH']
             # ... do conversion ...
             # verify balance changed
@@ -28,7 +35,6 @@ def wallet_balances(bvnk_api):
     balances = {}
 
     for wallet in wallets:
-        # FIX: Currency is nested inside a 'currency' object
         currency_obj = wallet.get('currency', {})
         currency_code = currency_obj.get('code', '')
 
@@ -43,7 +49,9 @@ def wallet_balances(bvnk_api):
 @pytest.fixture
 def create_and_accept_quote(bvnk_api):
     """
-    Fixture factory for creating and accepting quotes
+    Fixture factory for creating and accepting quotes.
+
+    Simplifies E2E conversion tests by handling quote workflow.
 
     Usage:
         def test_conversion(bvnk_api, create_and_accept_quote):
@@ -69,7 +77,6 @@ def create_and_accept_quote(bvnk_api):
 
         # Create quote
         quote = bvnk_api.create_quote(from_currency, to_currency, amount)
-        # FIX: Changed 'rate' to 'price'
         print(f"Quote created: UUID={quote['uuid']}, Price={quote.get('price', 'N/A')}")
 
         # Accept quote
@@ -84,7 +91,9 @@ def create_and_accept_quote(bvnk_api):
 @pytest.fixture
 def verify_balance_change(bvnk_api):
     """
-    Fixture that provides a function to verify balance changes
+    Fixture that provides a function to verify balance changes.
+
+    Compares current balances with initial balances and expected changes.
 
     Usage:
         def test_conversion(bvnk_api, wallet_balances, verify_balance_change):
@@ -125,7 +134,7 @@ def verify_balance_change(bvnk_api):
             assert abs(actual_change - expected_change) < tolerance, \
                 f"{currency} balance change mismatch: expected {expected_change}, got {actual_change}"
 
-            print(f"  Status: PASS")
+            print(f"  Status: PASS ✓")
 
     return _verify
 
@@ -133,7 +142,9 @@ def verify_balance_change(bvnk_api):
 @pytest.fixture
 def get_balances_for_currencies(bvnk_api):
     """
-    Fixture that provides a function to get balances for specific currencies
+    Fixture that provides a function to get balances for specific currencies.
+
+    Convenient way to get multiple balances at once.
 
     Usage:
         def test_something(bvnk_api, get_balances_for_currencies):
@@ -161,11 +172,13 @@ def get_balances_for_currencies(bvnk_api):
 @pytest.fixture
 def calculate_conversion_with_fee():
     """
-    Fixture that calculates expected conversion amounts including fee
+    Fixture that calculates expected conversion amounts including fee.
+
+    Uses service fee from settings (0.01% = 0.0001).
 
     Usage:
         def test_conversion(calculate_conversion_with_fee):
-            net_amount = calculate_conversion_with_fee(1.0, 50000.5)
+            gross, fee, net = calculate_conversion_with_fee(1.0, 50000.5)
 
     Returns:
         Function to calculate conversion
@@ -193,7 +206,9 @@ def calculate_conversion_with_fee():
 @pytest.fixture
 def print_test_header():
     """
-    Fixture that prints a formatted test header
+    Fixture that prints a formatted test header.
+
+    Makes test output more readable.
 
     Usage:
         def test_something(print_test_header):
@@ -201,33 +216,12 @@ def print_test_header():
     """
     def _print_header(test_name):
         """Print formatted test header"""
-        print("\n" + "="*60)
+        print("\n" + "="*70)
         print(f"TEST: {test_name}")
-        print("="*60 + "\n")
+        print("="*70 + "\n")
 
     return _print_header
 
-# use when I need the same session - can save time, but will reuse the token - for example in test_api_endpoints.py:
-# def test_authentication_echo(bvnk_session_client, print_test_header)
-@pytest.fixture(scope="session")
-def bvnk_session_client():
-    """
-    Session-scoped fixture for BVNK API client
-    Reuses same account for all tests (faster but less isolated)
-    """
-    print("\n" + "="*70)
-    print("Creating session BVNK API client...")
-    print("="*70)
-
-    client = BVNKApiClient()
-    init_response = client.init_account()
-
-    print(f"\nSession account setup complete!")
-    print("="*70)
-
-    yield client
-
-    client.close()
 
 # ============================================
 # BVNK Test Configuration Hooks
@@ -235,7 +229,9 @@ def bvnk_session_client():
 
 def pytest_configure(config):
     """
-    Configure BVNK-specific pytest markers
+    Configure BVNK-specific pytest markers.
+
+    Adds custom markers for better test organization.
     """
     config.addinivalue_line(
         "markers",
@@ -257,10 +253,10 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     """
-    Modify test collection for BVNK tests
-    Run E2E tests before functional tests
+    Modify test collection for BVNK tests.
+
+    Runs E2E tests before functional tests for logical flow.
     """
-    # Sort: e2e tests first, then functional
     def sort_key(item):
         if "e2e" in item.keywords:
             return 0
@@ -270,3 +266,56 @@ def pytest_collection_modifyitems(config, items):
             return 2
 
     items.sort(key=sort_key)
+
+
+def pytest_sessionstart(session):
+    """
+    Pytest hook - runs BEFORE test collection
+
+    Performs automatic health check to verify API availability.
+    Aborts entire test session if API is not ready.
+
+    This ensures we fail fast and don't waste time running tests
+    against an unavailable or unhealthy API.
+    """
+    health_url = f"{settings.BVNK_API_BASE_URL}/health"
+
+    print("\n" + "="*70)
+    print("PRE-SESSION HEALTH CHECK")
+    print("="*70)
+    print(f"Verifying BVNK API is ready...")
+    print(f"Health URL: {health_url}")
+
+    try:
+        response = requests.get(health_url, timeout=10)
+
+        if response.status_code != 200:
+            print(f"\n API HEALTH CHECK FAILED!")
+            print(f"Status Code: {response.status_code}")
+            pytest.exit(
+                f"\nCannot proceed - API is not healthy!\n"
+                f"Please check the API server and try again.\n",
+                returncode=1
+            )
+
+        health_data = response.json()
+
+        print(f"\n✓ API HEALTH CHECK PASSED")
+        print(f"├─ Uptime: {health_data.get('uptime', 'N/A')}")
+        print(f"├─ DB Size: {health_data.get('approximate_db_size', 'N/A')}")
+        print(f"└─ Total Requests: {health_data.get('total_authenticated_requests', 0)}")
+        print("="*70)
+        print("Proceeding with test execution...\n")
+
+    except requests.exceptions.RequestException as e:
+        print(f"\n API HEALTH CHECK FAILED!")
+        print(f"Error: {str(e)}")
+        pytest.exit(
+            f"\nCannot connect to API at {health_url}\n"
+            f"Please check:\n"
+            f"  1. API server is running\n"
+            f"  2. Network connectivity\n"
+            f"  3. Firewall settings\n"
+            f"  4. Base URL in settings: {settings.BVNK_API_BASE_URL}\n",
+            returncode=1
+        )
