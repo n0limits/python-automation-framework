@@ -237,45 +237,45 @@ def test_get_specific_wallet(bvnk_api, print_test_header):
 
     print(f"\n TEST PASSED: Specific wallet retrieved successfully")
 
-@pytest.mark.bvnk
-@pytest.mark.functional
-def test_get_specific_wallet(bvnk_api, print_test_header):
-    """
-    Test: Get specific wallet by ID
-
-    Verifies:
-    - Individual wallet can be retrieved by ID
-    - Wallet details are complete and valid
-    - Wallet matches expected structure
-    """
-    # === ARRANGE ===
-    print_test_header("Get Specific Wallet")
-    helper = ApiValidationHelper(bvnk_api)
-
-    # First get all wallets to find a valid ID
-    all_wallets = bvnk_api.list_wallets()
-
-    from assertpy import assert_that
-    assert_that(all_wallets).is_not_empty()
-
-    # Use first wallet's ID for testing
-    test_wallet_from_list = all_wallets[0]
-    wallet_id = test_wallet_from_list['id']
-    expected_currency = test_wallet_from_list['currency']['code']
-
-    print(f"\nTesting with wallet ID: {wallet_id}")
-    print(f"Expected currency: {expected_currency}")
-
-    # === ACT ===
-    specific_wallet = helper.validate_specific_wallet(wallet_id, expected_currency)
-
-    # === ASSERT ===
-    # Verify it matches the wallet from list endpoint
-    assert_that(specific_wallet['id']).is_equal_to(test_wallet_from_list['id'])
-    assert_that(specific_wallet['currency']['code']).is_equal_to(test_wallet_from_list['currency']['code'])
-    assert_that(specific_wallet['balance']).is_equal_to(test_wallet_from_list['balance'])
-
-    print(f"\n TEST PASSED: Specific wallet retrieved and validated")
+# @pytest.mark.bvnk
+# @pytest.mark.functional
+# def test_get_specific_wallet(bvnk_api, print_test_header):
+#     """
+#     Test: Get specific wallet by ID
+#
+#     Verifies:
+#     - Individual wallet can be retrieved by ID
+#     - Wallet details are complete and valid
+#     - Wallet matches expected structure
+#     """
+#     # === ARRANGE ===
+#     print_test_header("Get Specific Wallet")
+#     helper = ApiValidationHelper(bvnk_api)
+#
+#     # First get all wallets to find a valid ID
+#     all_wallets = bvnk_api.list_wallets()
+#
+#     from assertpy import assert_that
+#     assert_that(all_wallets).is_not_empty()
+#
+#     # Use first wallet's ID for testing
+#     test_wallet_from_list = all_wallets[0]
+#     wallet_id = test_wallet_from_list['id']
+#     expected_currency = test_wallet_from_list['currency']['code']
+#
+#     print(f"\nTesting with wallet ID: {wallet_id}")
+#     print(f"Expected currency: {expected_currency}")
+#
+#     # === ACT ===
+#     specific_wallet = helper.validate_specific_wallet(wallet_id, expected_currency)
+#
+#     # === ASSERT ===
+#     # Verify it matches the wallet from list endpoint
+#     assert_that(specific_wallet['id']).is_equal_to(test_wallet_from_list['id'])
+#     assert_that(specific_wallet['currency']['code']).is_equal_to(test_wallet_from_list['currency']['code'])
+#     assert_that(specific_wallet['balance']).is_equal_to(test_wallet_from_list['balance'])
+#
+#     print(f"\n TEST PASSED: Specific wallet retrieved and validated")
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
