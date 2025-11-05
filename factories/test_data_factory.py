@@ -2,10 +2,23 @@ from faker import Faker
 from typing import Dict, Any
 import random
 
+from utils.bvnk import api_client
+
 fake = Faker()
 
 class TestDataFactory:
-    """Factory for generating test data"""
+    """
+    Factory Pattern for generating realistic test data.
+
+    Example:
+        # Create test user
+        admin = TestDataFactory.create_user("admin")
+        response = api_client.post("/users", json=admin)
+
+        # Create test product
+        laptop = TestDataFactory.create_product("electronics")
+        response = api_client.post("/products", json=laptop)
+    """
 
     @staticmethod
     def create_user(user_type: str = "standard") -> Dict[str, Any]:
@@ -68,9 +81,3 @@ class TestDataFactory:
         }
 
         return products_by_category.get(category, products_by_category["electronics"])
-
-# Usage in tests
-def test_create_user_api():
-    user_data = TestDataFactory.create_user("admin")
-    response = api_client.post("/users", json=user_data)
-    assert response.status_code == 201

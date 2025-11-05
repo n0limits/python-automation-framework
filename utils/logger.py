@@ -3,7 +3,26 @@ from threading import Lock
 from typing import Optional
 
 class Logger:
-    """Singleton logger"""
+    """
+    Singleton Pattern for centralized logging throughout the framework.
+    - Single configuration point for all logging
+
+    Log Levels:
+    - DEBUG: Detailed diagnostic information
+    - INFO: General information about test execution
+    - WARNING: Warning messages (test should still pass)
+    - ERROR: Error messages (test failures, exceptions)
+
+    Output:
+    - Console: INFO and above (for real-time monitoring)
+    - File: DEBUG and above (for detailed post-execution analysis)
+
+    Example:
+        logger = Logger()  # Always returns same instance
+        logger.info("Test started")
+        logger.debug("Detailed debug info")
+        logger.error("Test failed")
+    """
 
     _instance: Optional['Logger'] = None
     _lock: Lock = Lock()
@@ -17,6 +36,14 @@ class Logger:
         return cls._instance
 
     def __init__(self):
+        """
+        Initialize logger only once with console and file handlers.
+        Configuration:
+        - Logger name: "AutomationFramework"
+        - Console: INFO level (shows important messages during test run)
+        - File: DEBUG level (captures everything for debugging)
+        - Format: timestamp - name - level - message
+        """
         if self._logger is None:
             self._logger = logging.getLogger("AutomationFramework")
             self._logger.setLevel(logging.DEBUG)
