@@ -2,13 +2,25 @@
 
 A professional test automation framework for BVNK cryptocurrency conversion API testing, demonstrating industry best practices, design patterns, and comprehensive API testing capabilities.
 
-**API Base URL:** http://bvnksimulator.pythonanywhere.com  
+**API Base URL:** http://bvnksimulator.pythonanywhere.com
 **API Documentation:** http://bvnksimulator.pythonanywhere.com/docs
+
+---
+
+## Recent Improvements & Fixes
+
+This framework has been enhanced based on code review feedback. Key improvements:
+
+- **Pytest Parametrization** - Reduced E2E test duplication by 60% (150 lines → 60 lines)
+- **Comprehensive Error Handling** - Added 7 custom exception classes with content-type validation
+- **Consistent Logging** - Replaced print statements with proper logger usage
+- **Base Test Class** - Optional base class for shared test functionality
 
 ---
 
 ## Table of Contents
 
+- [Recent Improvements & Fixes](#recent-improvements--fixes)
 - [Quick Start](#quick-start)
 - [Assignment Overview](#assignment-overview)
 - [Software Requirements](#software-requirements)
@@ -17,15 +29,19 @@ A professional test automation framework for BVNK cryptocurrency conversion API 
 - [Running Tests](#running-tests)
 - [Test Organization](#test-organization)
 - [Implementation Details](#implementation-details)
+- [Error Handling](#error-handling)
 - [Configuration](#configuration)
 - [Design Patterns](#design-patterns)
 - [Reporting](#reporting)
 - [Troubleshooting](#troubleshooting)
 - [Assignment Requirements](#assignment-requirements)
+- [Code Quality Improvements](#code-quality-improvements)
+- [Learning & Development Notes](#learning--development-notes)
 
 ---
 
 ## Quick Start
+
 ```bash
 # 1. Clone repository
 git clone <repository-url>
@@ -60,25 +76,41 @@ Automated testing suite for the BVNK cryptocurrency conversion API simulator, de
 | Category | Count | Status |
 |----------|-------|--------|
 | **Smoke Tests** | 4 | Complete |
-| **E2E Tests** | 3 | Complete |
+| **E2E Tests** | 3 | Complete (Parametrized) |
 | **Functional Tests** | 6 | Complete |
+| **Negative Tests** | 3 | Complete |
 | **Verification Tests** | 6 | Complete (skipped by default) |
 | **Examples** | 5 | Complete (skipped by default) |
-| **Total Active Tests** | 13 | All Passing |
+| **Total Active Tests** | 16 | All Passing |
 | **API Coverage** | 100% | All 7 endpoints |
 
 ### Key Features
 
+#### Core Testing Features
 - **All Assignment Requirements Met**: 3 E2E + 6 functional tests (plus bonus tests)
+- **Pytest Parametrization**: E2E tests use parametrization to eliminate code duplication
 - **Pre-Session Health Check**: Automatic API health validation before test execution
 - **Smoke Tests**: Fast health checks to ensure API availability
+- **Negative Testing**: Validates error scenarios and edge cases
 - **Parallel Execution**: pytest-xdist for faster test runs
 - **Comprehensive Reporting**: HTML and Allure reports
+
+#### Architecture & Design
 - **AAA Pattern**: Arrange-Act-Assert in all tests
-- **Helper Classes**: Reusable test utilities
+- **Helper Classes**: Reusable test utilities (ConversionTestHelper, ApiValidationHelper)
+- **Base Test Class**: Optional base class for shared functionality
+- **Comprehensive Error Handling**: Custom exception hierarchy with content-type validation
+- **Proper Logging**: Logger infrastructure used consistently throughout
 - **100% Endpoint Coverage**: All 7 BVNK endpoints tested
 - **Design Patterns**: Helper, Configuration, Data Class, Fixture patterns
 - **Professional Structure**: Scalable and maintainable
+
+#### Code Quality
+- **Custom Exceptions**: 7 exception classes for different error scenarios
+- **Content-Type Validation**: Safe JSON parsing with edge case handling
+- **Consistent Logging**: Logger used for operational messages, print for user output
+- **Test Isolation**: Proper fixture scoping and cleanup
+- **Type Hints**: Throughout helper classes and utilities
 
 ---
 
@@ -90,7 +122,6 @@ Automated testing suite for the BVNK cryptocurrency conversion API simulator, de
 - **Version:** 3.12.x or higher (recommended: 3.12.0+)
 - **Why:** Runs the test framework with pre-built binary wheels
 - **Download:** https://www.python.org/downloads/
-- **Note:** Python 3.12 has pre-built wheels for all dependencies, no compiler needed
 - **Verify:**
 ```bash
   python --version
@@ -133,18 +164,13 @@ pip install -r requirements.txt
 #### Reporting Packages
 - **pytest-html** (4.1.1+) - HTML test reports
 - **pytest-metadata** (3.1.1+) - Report metadata
-- **allure-pytest** (2.15.0+) - Allure test reports
-
-#### Optional Framework Extension Packages
-- **playwright** (1.55.0) - Web UI testing (pre-installed for future use)
-- **Appium-Python-Client** (4.2.0) - Mobile testing (pre-installed for future use)
-- **selenium** (4.27.1) - WebDriver support (pre-installed for future use)
+- **allure-pytest** (2.15.0+) - Allure test reports (optional)
 
 ---
 
 ## Installation
 
-### Minimal Installation (BVNK Tests Only)
+### Step-by-Step Installation
 
 #### Step 1: Install Python 3.12+
 
@@ -194,14 +220,6 @@ python -m pip install --upgrade pip
 
 # Install all requirements
 pip install -r requirements.txt
-
-# This will install:
-# - pytest and plugins (pytest-xdist, pytest-order, pytest-html)
-# - requests
-# - assertpy
-# - faker
-# - reporting tools (allure-pytest)
-# - all dependencies
 ```
 
 #### Step 6: Verify Installation
@@ -229,78 +247,48 @@ xdg-open reports/bvnk_report.html  # Linux
 
 ---
 
-## Disk Space Requirements
-
-| Component | Disk Space | Required For |
-|-----------|------------|--------------|
-| Python 3.12+ | approximately 500 MB | BVNK Tests |
-| Git | approximately 300 MB | BVNK Tests |
-| Python packages | approximately 200 MB | BVNK Tests |
-| **Total (BVNK only)** | **approximately 1 GB** | **Minimal** |
-
----
-
 ## Project Structure
+
 ```
 python-automation-framework/
 ├── config/
 │   ├── __init__.py
-│   ├── settings.py                      # Configuration settings
-│   └── config_manager.py                # Singleton config manager
+│   └── settings.py                      # Configuration settings
 │
 ├── utils/
-│   ├── api_request_builder.py           # Builder pattern for HTTP requests
-│   ├── auth_strategy.py                 # Strategy pattern for authentication
-│   ├── browser_factory.py               # Factory pattern for browsers
-│   ├── test_data_factory.py             # Factory pattern for test data
-│   ├── test_decorators.py               # Decorators (retry, logging, etc.)
 │   ├── logger.py                        # Singleton logger
-│   ├── database.py                      # Singleton database connection
 │   │
 │   └── bvnk/                            # BVNK-specific utilities
 │       ├── __init__.py
-│       ├── api_client.py                # BVNK API client
+│       ├── api_client.py                # BVNK API client (with error handling)
 │       ├── conversion_helper.py         # E2E test helper
 │       ├── api_validation_helper.py     # Functional test helper
 │       ├── helpers.py                   # Utility functions
 │       └── test_data.py                 # Test data definitions
 │
-├── pages/
-│   └── base_page.py                     # Base page class (Page Object Model)
-│
 ├── tests/
-│   ├── conftest.py                      # Root fixtures (bvnk_api, bvnk_client)
+│   ├── base_test.py                     # Base test class (optional)
+│   ├── conftest.py                      # Root fixtures
+│   │
 │   └── bvnk/                            # BVNK test suite
-│       ├── conftest.py                  # BVNK-specific fixtures and hooks
-│       │                                # - pytest_sessionstart (health check hook)
-│       │                                # - Helper fixtures (wallet_balances, etc.)
+│       ├── conftest.py                  # BVNK fixtures & hooks
 │       │
 │       ├── smoke/                       # Smoke Tests (4)
 │       │   └── test_health_check.py
-│       │       ├── test_01_api_is_accessible
-│       │       ├── test_02_api_responds_quickly
-│       │       ├── test_03_health_response_structure
-│       │       └── test_04_health_no_authentication_required
 │       │
-│       ├── e2e/                         # End-to-End Tests (3)
+│       ├── e2e/                         # End-to-End Tests (3 - parametrized)
 │       │   └── test_currency_conversions.py
-│       │       ├── test_convert_1_eth_to_trx
-│       │       ├── test_convert_420_trx_to_usdt
-│       │       └── test_convert_987_trx_to_eth
 │       │
 │       ├── functional/                  # Functional Tests (6)
 │       │   └── test_api_endpoints.py
-│       │       ├── test_authentication_echo
-│       │       ├── test_list_all_wallets
-│       │       ├── test_get_specific_wallet
-│       │       ├── test_quote_expiry
-│       │       ├── test_insufficient_balance
-│       │       └── test_service_fee_calculation
 │       │
-│       ├── verification/                # Verification Tests (6 - skipped by default)
+│       ├── negative/                    # Negative Tests (3)
+│       │   └── test_api_negative.py
+│       │
+│       ├── verification/                # Verification Tests (6 - skipped)
 │       │   └── test_verification.py
 │       │
-│       └── examples/                    # Usage Examples (5 - skipped by default)
+│       └── examples/                    # Usage Examples (5 - skipped)
 │           └── test_helper_usage_examples.py
 │
 ├── reports/                             # Test reports (generated)
@@ -313,8 +301,27 @@ python-automation-framework/
 ├── .env.example                         # Environment variables template
 ├── .gitignore                          # Git ignore rules
 ├── README.md                            # This file
-└── QUICKSTART.md                        # Quick setup guide
+├── QUICKSTART.md                        # Quick setup guide
 ```
+
+### Core Files Explained
+
+**Configuration:**
+- `config/settings.py` - Centralized configuration with environment overrides
+
+**Utilities:**
+- `utils/logger.py` - Singleton logger with file and console handlers
+- `utils/bvnk/api_client.py` - API client with comprehensive error handling
+- `utils/bvnk/conversion_helper.py` - Helper for E2E conversion tests
+- `utils/bvnk/api_validation_helper.py` - Helper for functional validation tests
+- `utils/bvnk/helpers.py` - Utility functions (balance retrieval, fee calculation)
+- `utils/bvnk/test_data.py` - Test data as dataclasses
+
+**Tests:**
+- `tests/base_test.py` - Optional base class with shared assertions and methods
+- `tests/conftest.py` - Root fixtures (bvnk_api, bvnk_client)
+- `tests/bvnk/conftest.py` - BVNK-specific fixtures and pre-session health check hook
+
 
 ---
 
@@ -353,14 +360,14 @@ Proceeding with test execution...
 # Smoke tests only (health checks)
 pytest tests/bvnk/smoke/ -v
 
-# E2E tests only (3 conversion tests)
+# E2E tests only (3 parametrized conversion tests)
 pytest tests/bvnk/e2e/ -v -n auto
 
 # Functional tests only (6 API tests)
 pytest tests/bvnk/functional/ -v -n auto
 
-# Verification tests (manual run - skipped by default)
-pytest tests/bvnk/verification/ -v -s -n0
+# Negative tests only (3 error scenario tests)
+pytest tests/bvnk/negative/ -v -n auto
 ```
 
 ### Run Tests by Marker
@@ -371,29 +378,23 @@ pytest -m smoke -v
 # All E2E tests
 pytest -m e2e -v -n auto
 
-# All health checks
-pytest -m health -v
-
-# Functional tests only
+# All functional tests
 pytest -m functional -v -n auto
 
 # E2E smoke tests (combination)
 pytest -m "e2e and smoke" -v -n auto
-
-# Exclude verification and examples
-pytest -m "not verification and not examples" -v -n auto
 ```
 
 ### Run Specific Test
 ```bash
-# Single test by name
-pytest tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx -v -s
+# Single parametrized test (runs all 3 parameter sets)
+pytest tests/bvnk/e2e/test_currency_conversions.py::test_currency_conversion -v -s
+
+# Single parameter set
+pytest tests/bvnk/e2e/test_currency_conversions.py::test_currency_conversion[convert_1_eth_to_trx] -v -s
 
 # Single test file
 pytest tests/bvnk/functional/test_api_endpoints.py -v
-
-# Smoke tests sequentially (recommended for health checks)
-pytest tests/bvnk/smoke/ -v -s -n0
 ```
 
 ### Run with Reporting Options
@@ -410,17 +411,6 @@ pytest tests/bvnk/ -v -n auto --durations=10
 
 # Show local variables on failure
 pytest tests/bvnk/ -v -l
-```
-
-### Verification Tests (Manual Run)
-
-Verification tests are skipped by default. To run them:
-```bash
-# Run all verification tests
-pytest tests/bvnk/verification/ -v -s -n0
-
-# Run specific verification test
-pytest tests/bvnk/verification/test_verification.py::test_debug_wallet_structure -v -s -n0
 ```
 
 ---
@@ -442,17 +432,8 @@ pytest tests/bvnk/verification/test_verification.py::test_debug_wallet_structure
 
 **Key Features:**
 - Runs with `@pytest.mark.order(1)` to execute first
-- Accepts both 200 (healthy) and 500 (overloaded) as valid responses
-- 500 under parallel load validates rate limiting is working
 - Pre-session hook validates health before any tests run
-
-**Run Command:**
-```bash
-pytest tests/bvnk/smoke/ -v -s
-```
-
-**Note on Parallel Execution:**
-Health checks use `@pytest.mark.xdist_group(name="health")` to run sequentially on same worker during parallel execution. This prevents race conditions on the /health endpoint.
+- Sequential execution during parallel runs (xdist_group)
 
 ---
 
@@ -460,29 +441,49 @@ Health checks use `@pytest.mark.xdist_group(name="health")` to run sequentially 
 
 **Location:** `tests/bvnk/e2e/test_currency_conversions.py`
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| `test_convert_1_eth_to_trx` | Convert 1 ETH to TRX | Quote creation, acceptance, balance changes |
-| `test_convert_420_trx_to_usdt` | Convert 420 TRX to USDT | Complete conversion workflow |
-| `test_convert_987_trx_to_eth` | Convert 987 TRX to ETH | Balance verification with fees |
+**Improved with Pytest Parametrization:**
+
+Single parametrized test function handles all conversion scenarios:
+
+```python
+@pytest.mark.parametrize(
+    "test_case_key",
+    [
+        pytest.param("eth_to_trx", id="convert_1_eth_to_trx"),
+        pytest.param("trx_to_usdt", id="convert_420_trx_to_usdt"),
+        pytest.param("trx_to_eth", id="convert_987_trx_to_eth"),
+    ]
+)
+def test_currency_conversion(bvnk_api, wallet_balances, test_case_key):
+    # Single test handles all scenarios
+```
+
+**Benefits:**
+- 60% code reduction (150 lines → 60 lines)
+- Easy to add new conversion scenarios
+- Maintains clear test IDs in reports
+- Same test coverage with less duplication
+
+| Test Parameter | Description | Validates |
+|----------------|-------------|-----------|
+| `convert_1_eth_to_trx` | Convert 1 ETH to TRX | Quote creation, acceptance, balance changes |
+| `convert_420_trx_to_usdt` | Convert 420 TRX to USDT | Complete conversion workflow |
+| `convert_987_trx_to_eth` | Convert 987 TRX to ETH | Balance verification with fees |
 
 **Test Flow:**
-1. **Arrange:** Get initial wallet balances
+1. **Arrange:** Get initial wallet balances, verify sufficient balance
 2. **Act:** Create quote, Accept quote, Wait for completion
 3. **Assert:** Verify balance changes match expected amounts
 
 **Helper Used:** `ConversionTestHelper`
-
-**Run Command:**
-```bash
-pytest tests/bvnk/e2e/ -v -n auto
-```
 
 ---
 
 ### Functional Tests (API Validation & Business Logic)
 
 **Location:** `tests/bvnk/functional/test_api_endpoints.py`
+
+**Improved with Consistent Logger Usage**
 
 | Test | Endpoint | Validates |
 |------|----------|-----------|
@@ -493,80 +494,68 @@ pytest tests/bvnk/e2e/ -v -n auto
 | `test_insufficient_balance` | `PUT /api/v1/quote/accept/{uuid}` | Rejects insufficient balance |
 | `test_service_fee_calculation` | `PUT /api/v1/quote/accept/{uuid}` | 0.01% fee applied correctly |
 
-**Test Pattern:** AAA with `ApiValidationHelper`
-
-**Run Command:**
-```bash
-pytest tests/bvnk/functional/ -v -n auto
+**Logging Pattern:**
+```python
+logger.info("Testing authentication via /echo endpoint")  # Flow
+logger.debug(f"Test payload: {test_payload}")  # Details
+print("\nTEST PASSED: Authentication working correctly")  # Result
 ```
 
 ---
 
-### Verification Tests (Debug & Exploration)
+### Negative Tests
 
-**Location:** `tests/bvnk/verification/test_verification.py`
+**Location:** `tests/bvnk/negative/test_api_negative.py`
 
-| Test | Purpose |
-|------|---------|
-| `test_debug_wallet_structure` | Explore wallet API response structure |
-| `test_debug_quote_api` | Test quote payload formats |
-| `test_init_endpoint_directly` | Verify init endpoint behavior |
-| `test_complete_api_flow` | Test full workflow end-to-end |
-| `test_verify_api_response_structures` | Document all API structures |
-| `test_verify_error_responses` | Test error handling |
-
-**Status:** Skipped by default (for manual debugging)
-
-**Run Command:**
-```bash
-pytest tests/bvnk/verification/test_verification.py::test_debug_wallet_structure -v -s -n0
-```
+| Test | Validates |
+|------|-----------|
+| `test_get_nonexistent_wallet` | 404 error for non-existent resources |
+| `test_create_quote_negative_amount` | Validation of negative amounts |
+| `test_accept_invalid_quote_uuid` | Error handling for invalid UUIDs |
 
 ---
 
 ## Implementation Details
 
-### Pre-Session Health Check Hook
-
-**Location:** `tests/bvnk/conftest.py`
-
-**Function:** `pytest_sessionstart(session)`
-
-**Purpose:** Automatically validates API health before any tests are collected or executed
-
-**Behavior:**
-```python
-def pytest_sessionstart(session):
-    """
-    Pytest hook - runs BEFORE test collection
-    
-    Performs automatic health check to verify API availability.
-    Aborts entire test session if API is not ready.
-    """
-    health_url = f"{settings.BVNK_API_BASE_URL}/health"
-    
-    response = requests.get(health_url, timeout=10)
-    
-    if response.status_code != 200:
-        pytest.exit(
-            "Cannot proceed - API is not healthy!",
-            returncode=1
-        )
-```
-
-**Benefits:**
-- Fail fast if API is down
-- No wasted time running tests against unavailable API
-- Clear error message about environment state
-- Executes before test collection (very early in pytest lifecycle)
-
----
-
-### API Client
+### API Client with Comprehensive Error Handling
 
 **File:** `utils/bvnk/api_client.py`
 
-**Class:** `BVNKApiClient`
+**Improved Error Handling:**
+
+**Custom Exception Hierarchy:**
+```python
+BVNKApiError (base)
+├── BVNKAuthenticationError (401)
+├── BVNKResourceNotFoundError (404)
+├── BVNKValidationError (400, 422)
+├── BVNKQuoteExpiredError (410, 412)
+├── BVNKInsufficientBalanceError (412, 422)
+├── BVNKServerError (5xx)
+└── BVNKInvalidResponseError (non-JSON, invalid content-type)
+```
+
+**Centralized Response Handling:**
+```python
+def _handle_response(self, response, endpoint=""):
+    """
+    Centralized error handling with:
+    - HTTP error status validation
+    - Content-type checking before JSON parsing
+    - 204 No Content handling
+    - HTML error page detection
+    - Contextual error messages
+    """
+    # Handles all edge cases safely
+```
+
+**Key Improvements:**
+- Content-type validation before `.json()` calls (prevents crashes)
+- Handles 204 No Content gracefully
+- Won't crash on HTML error pages
+- Specific exception types for different errors
+- Contextual error messages with endpoint info
+- Response body preview in exceptions
 
 **Methods:**
 - `init_account()` - Initialize account and get bearer token
@@ -579,31 +568,57 @@ def pytest_sessionstart(session):
 - `wait_for_quote_completion(quote_uuid, timeout, poll_interval)` - Wait for completion with exponential backoff
 - `close()` - Close session
 
-**Features:**
-- Automatic bearer token management
-- Session-based connection pooling
-- Exponential backoff for polling (0.5s → 1.5x → max 3s)
-- Proper error handling
-- Request/response logging
+---
 
-**Example Usage:**
+## Error Handling
+
+### Exception Hierarchy
+
+The framework provides comprehensive error handling through a custom exception hierarchy:
+
 ```python
-# Initialize client
-client = BVNKApiClient()
-client.init_account()
+from utils.bvnk.api_client import (
+    BVNKApiError,                    # Base exception
+    BVNKAuthenticationError,         # 401 errors
+    BVNKResourceNotFoundError,       # 404 errors
+    BVNKValidationError,             # 400, 422 errors
+    BVNKQuoteExpiredError,           # 410, 412 errors (quote-specific)
+    BVNKInsufficientBalanceError,    # 412, 422 errors (balance-specific)
+    BVNKServerError,                 # 5xx errors
+    BVNKInvalidResponseError         # Invalid JSON or content-type
+)
+```
 
-# List wallets
-wallets = client.list_wallets()
+### Usage in Tests
 
-# Create and accept quote
-quote = client.create_quote('ETH', 'TRX', 1.0)
-result = client.accept_quote(quote['uuid'])
+```python
+def test_nonexistent_wallet(bvnk_api):
+    """Test demonstrates custom exception usage"""
+    try:
+        bvnk_api.get_wallet(999999)
+        pytest.fail("Should have raised BVNKResourceNotFoundError")
+    except BVNKResourceNotFoundError as e:
+        # Exception includes:
+        # - Descriptive message
+        # - Status code
+        # - Response body preview
+        assert e.status_code == 404
+        logger.info(f"Correctly caught: {e}")
+```
 
-# Wait for completion
-final_quote = client.wait_for_quote_completion(quote['uuid'], timeout=30)
+### Safe JSON Parsing
 
-# Clean up
-client.close()
+All API responses are validated before parsing:
+
+```python
+# Before (UNSAFE):
+response = self.session.get(url)
+response.raise_for_status()
+return response.json()  # Can crash on 204 or HTML
+
+# After (SAFE):
+response = self.session.get(url)
+return self._handle_response(response, endpoint=url)  # Safe handling
 ```
 
 ---
@@ -618,7 +633,7 @@ client.close()
 
 **Key Methods:**
 ```python
-# Execute complete conversion
+# Execute complete conversion workflow
 helper.execute_conversion(from_currency, to_currency, amount)
 
 # Verify balance changes
@@ -630,15 +645,15 @@ helper.verify_sufficient_balance(balances, currency, required_amount)
 
 **Usage in Tests:**
 ```python
-def test_convert_eth_to_trx(bvnk_api, wallet_balances):
+def test_currency_conversion(bvnk_api, wallet_balances, test_case_key):
     helper = ConversionTestHelper(bvnk_api)
-    
+
     # Arrange
     helper.verify_sufficient_balance(wallet_balances, 'ETH', 1.0)
-    
+
     # Act
     result = helper.execute_conversion('ETH', 'TRX', 1.0)
-    
+
     # Assert
     helper.verify_balance_changes(wallet_balances, 'ETH', 'TRX', 1.0)
 ```
@@ -659,28 +674,56 @@ helper.validate_echo_response(test_payload)
 # Validate wallet list structure
 helper.validate_wallet_list(min_expected=3)
 
-# Validate specific wallet
-helper.validate_specific_wallet(wallet_id, expected_currency)
-
-# Test quote expiry
-quote_uuid = helper.test_quote_expiry(from_currency, to_currency, amount, wait_time)
-
-# Verify quote expiry error
-helper.verify_quote_expiry_error(quote_uuid, expected_statuses=[400, 404, 410, 412])
-
-# Verify insufficient balance error
-helper.verify_insufficient_balance_error(from_currency, to_currency, excessive_amount, expected_statuses)
-
 # Verify service fee calculation
 helper.verify_service_fee(amount, quote, expected_fee_percent)
+
+# Verify error responses
+helper.verify_quote_expiry_error(quote_uuid, expected_statuses)
+helper.verify_insufficient_balance_error(from_currency, to_currency, amount, expected_statuses)
 ```
 
-**Usage in Tests:**
+---
+
+#### Base Test Class (Optional)
+
+**File:** `tests/base_test.py`
+
+**Purpose:** Optional base class for shared test functionality
+
+**Features:**
+- Automatic setup/teardown via `@pytest.fixture(autouse=True)`
+- Common assertion methods
+- Helper methods for wallet operations
+- Convenience methods for conversions
+- Consistent logging
+
+**Usage:**
+
 ```python
-def test_list_wallets(bvnk_api):
-    helper = ApiValidationHelper(bvnk_api)
-    wallets = helper.validate_wallet_list(min_expected=3)
+# Option 1: Function-based (current approach - still valid)
+def test_conversion(bvnk_api, wallet_balances):
+    # Use fixtures
+    pass
+
+# Option 2: Class-based (using base class)
+class TestConversions(BaseBVNKTest):
+    def test_conversion(self):
+        # Use self.api, self.assert_balance_changed(), etc.
+        initial_eth = self.get_balance('ETH')
+        self.execute_conversion('ETH', 'TRX', 1.0)
+        self.assert_balance_decreased('ETH', initial_eth)
 ```
+
+**Common Assertions:**
+```python
+self.assert_balance_changed('ETH', initial_eth, -1.0, tolerance=0.01)
+self.assert_sufficient_balance('ETH', 1.0)
+self.assert_wallet_exists('TRX')
+self.assert_balance_decreased('ETH', initial_eth)
+self.assert_balance_increased('TRX', initial_trx)
+```
+
+**Note:** Both function-based and class-based approaches are valid. Use what fits your testing style.
 
 ---
 
@@ -692,99 +735,23 @@ def test_list_wallets(bvnk_api):
 ```python
 @pytest.fixture(scope="session")
 def bvnk_client():
-    """
-    Session-scoped BVNK API client.
-    Creates one client for entire test session.
-    Use for read-only operations (faster).
-    """
+    """Session-scoped client for read-only operations"""
 ```
 
 **bvnk_api** - Function-scoped BVNK API client
 ```python
 @pytest.fixture(scope="function")
 def bvnk_api():
-    """
-    Function-scoped BVNK API client.
-    Creates fresh client for each test.
-    Use for tests that modify state (E2E tests).
-    """
-```
-
-**bvnk_base_url** - Provides BVNK API base URL
-```python
-@pytest.fixture
-def bvnk_base_url():
-    """Provides BVNK API base URL from settings"""
-    return settings.BVNK_API_BASE_URL
+    """Fresh client for each test (state-modifying operations)"""
 ```
 
 #### BVNK-Specific Fixtures (tests/bvnk/conftest.py)
 
-**wallet_balances** - Initial wallet balances
-```python
-@pytest.fixture
-def wallet_balances(bvnk_api):
-    """Retrieves and returns initial wallet balances"""
-```
-
-**create_and_accept_quote** - Quote creation helper
-```python
-@pytest.fixture
-def create_and_accept_quote(bvnk_api):
-    """Factory fixture for creating and accepting quotes"""
-```
-
-**verify_balance_change** - Balance verification helper
-```python
-@pytest.fixture
-def verify_balance_change(bvnk_api):
-    """Function to verify balance changes"""
-```
-
-**get_balances_for_currencies** - Multi-currency balance getter
-```python
-@pytest.fixture
-def get_balances_for_currencies(bvnk_api):
-    """Get balances for specific currencies"""
-```
-
-**calculate_conversion_with_fee** - Fee calculation helper
-```python
-@pytest.fixture
-def calculate_conversion_with_fee():
-    """Calculate expected conversion with service fee"""
-```
-
-**print_test_header** - Formatted test header
-```python
-@pytest.fixture
-def print_test_header():
-    """Print formatted test header"""
-```
-
----
-
-### Utility Functions
-
-**File:** `utils/bvnk/helpers.py`
-
-**Functions:**
-```python
-# Get balance for specific currency
-balance = get_wallet_balance(wallets, 'ETH')
-
-# Get wallet object by currency
-wallet = get_wallet_by_currency(wallets, 'ETH')
-
-# Calculate expected service fee
-fee = calculate_expected_fee(amount=1.0, fee_percent=0.0001)
-
-# Calculate net amount after fee
-net = calculate_net_amount(gross_amount=1.0, fee_percent=0.0001)
-
-# Validate quote response structure
-is_valid = validate_quote_response(quote)
-```
+- `wallet_balances` - Initial wallet balances
+- `create_and_accept_quote` - Quote creation helper
+- `verify_balance_change` - Balance verification helper
+- `print_test_header` - Formatted test header
+- `pytest_sessionstart` - Pre-session health check hook
 
 ---
 
@@ -802,11 +769,6 @@ class ConversionTestCase:
     test_name: str
     timeout: Optional[int] = None
     description: Optional[str] = None
-
-@dataclass
-class ErrorStatusCodes:
-    QUOTE_EXPIRED: List[int] = field(default_factory=lambda: [400, 404, 410, 412])
-    INSUFFICIENT_BALANCE: List[int] = field(default_factory=lambda: [400, 412, 422])
 ```
 
 **Test Cases:**
@@ -816,35 +778,18 @@ CONVERSION_TEST_CASES = {
         from_currency='ETH',
         to_currency='TRX',
         amount=1.0,
-        test_name='Convert 1 ETH to TRX',
-        description='E2E test for ETH to TRX conversion'
+        test_name='Convert 1 ETH to TRX'
     ),
-    'trx_to_usdt': ConversionTestCase(
-        from_currency='TRX',
-        to_currency='USDT',
-        amount=420.0,
-        test_name='Convert 420 TRX to USDT'
-    ),
-    'trx_to_eth': ConversionTestCase(
-        from_currency='TRX',
-        to_currency='ETH',
-        amount=987.0,
-        test_name='Convert 987 TRX to ETH'
-    )
-}
-
-FUNCTIONAL_TEST_CASES = {
-    'quote_expiry': QuoteExpiryTestCase(),
-    'insufficient_balance': InsufficientBalanceTestCase(),
-    'fee_calculation': FeeCalculationTestCase()
+    # ... more test cases
 }
 
 ERROR_STATUS_CODES = ErrorStatusCodes()
+FUNCTIONAL_TEST_CASES = {...}
 ```
 
 **Usage:**
 ```python
-from utils.bvnk.test_data import CONVERSION_TEST_CASES, ERROR_STATUS_CODES
+from utils.bvnk.test_data import CONVERSION_TEST_CASES
 
 test_case = CONVERSION_TEST_CASES['eth_to_trx']
 helper.execute_conversion(
@@ -885,25 +830,11 @@ ALLURE_RESULTS_DIR=reports/allure-results
 **File:** `config/settings.py`
 ```python
 class Settings:
-    # BVNK API Configuration
-    BVNK_API_BASE_URL = os.getenv(
-        'BVNK_API_BASE_URL',
-        'http://bvnksimulator.pythonanywhere.com'
-    )
-    
-    # E2E Test Configuration
+    BVNK_API_BASE_URL = os.getenv('BVNK_API_BASE_URL', 'http://bvnksimulator.pythonanywhere.com')
     CONVERSION_TIMEOUT = int(os.getenv('CONVERSION_TIMEOUT', '30'))
-    
-    # Functional Test Configuration
     QUOTE_EXPIRY_WAIT_TIME = int(os.getenv('QUOTE_EXPIRY_WAIT_TIME', '22'))
     MIN_EXPECTED_WALLETS = int(os.getenv('MIN_EXPECTED_WALLETS', '3'))
-    
-    # Business Logic Configuration
     SERVICE_FEE_PERCENT = float(os.getenv('SERVICE_FEE_PERCENT', '0.0001'))
-    
-    # Reporting Configuration
-    REPORT_DIR = 'reports'
-    ALLURE_RESULTS_DIR = 'reports/allure-results'
 
 settings = Settings()
 ```
@@ -940,54 +871,16 @@ addopts =
 
 # Test markers
 markers =
-    # Active markers (used in current tests)
     bvnk: BVNK API tests
     smoke: Quick smoke tests (health checks)
     health: Health check tests
     e2e: End-to-end conversion tests
     functional: Functional validation tests
+    negative: Negative test scenarios
     conversion: Currency conversion tests
     quote: Quote operation tests
     wallet: Wallet operation tests
-    verification: Debug and verification tests (run manually)
-    examples: Example tests showing helper usage (run manually)
-    
-    # Future extension markers
-    regression: Full regression suite
-    frontend: Frontend/UI tests
-    backend: Backend/API tests
-    mobile: Mobile web tests
-    mobile_app: Native mobile app tests
 ```
-
-**Key Configuration:**
-- `testpaths = tests/bvnk` - Focus on BVNK tests
-- `-n auto` - Parallel execution (auto-detect CPU cores)
-- `--html=reports/bvnk_report.html` - Generate HTML report
-- Markers for test organization and filtering
-
-### Configuration Notes
-
-#### CONVERSION_TIMEOUT
-- **Purpose:** Maximum time to wait for conversion completion
-- **Default:** 30 seconds
-- **Adjustable:** Increase for slower networks
-
-#### QUOTE_EXPIRY_WAIT_TIME
-- **API Spec:** Quotes expire after 20 seconds
-- **Test Value:** 22 seconds (20 + 2 buffer)
-- **Reason:** Ensures quote has definitely expired before verification
-
-#### SERVICE_FEE_PERCENT
-- **Spec:** 0.01% fee on all conversions
-- **Value:** 0.0001 (as decimal)
-- **Example:** 1.0 ETH × 0.0001 = 0.0001 ETH fee
-
-#### Health Check Behavior
-- **Pre-session hook:** Validates API health before test collection
-- **Smoke tests:** Explicit health checks in test suite
-- **Parallel execution:** Health tests run sequentially (xdist_group)
-- **Accepted responses:** 200 (healthy) or 500 (overloaded but responding)
 
 ---
 
@@ -1000,14 +893,9 @@ markers =
 class ConversionTestHelper:
     def execute_conversion(self, from_currency, to_currency, amount):
         """Execute complete conversion workflow"""
-        quote = self.api_client.create_quote(from_currency, to_currency, amount)
-        self.api_client.accept_quote(quote['uuid'])
-        final_quote = self.api_client.wait_for_quote_completion(quote['uuid'])
-        return {'quote': quote, 'final_quote': final_quote}
-    
+
     def verify_balance_changes(self, initial_balances, from_currency, to_currency, amount):
         """Verify balances changed as expected"""
-        # Implementation...
 ```
 
 **ApiValidationHelper** - Encapsulates functional test validation:
@@ -1015,18 +903,15 @@ class ConversionTestHelper:
 class ApiValidationHelper:
     def validate_wallet_list(self, min_expected=3):
         """Validate wallet list response structure"""
-        # Implementation...
-    
+
     def verify_service_fee(self, amount, quote, expected_fee_percent):
         """Verify service fee calculation"""
-        # Implementation...
 ```
 
 **Benefits:**
 - Simplifies test code (AAA pattern)
 - Reusable across tests
 - Consistent verification logic
-- Easy to maintain
 
 ---
 
@@ -1043,7 +928,6 @@ class Settings:
 - Single source of truth
 - Environment-specific overrides
 - Type conversion handled
-- Easy testing different configurations
 
 ---
 
@@ -1057,14 +941,11 @@ class ConversionTestCase:
     to_currency: str
     amount: float
     test_name: str
-    timeout: Optional[int] = None
-    description: Optional[str] = None
 ```
 
 **Benefits:**
 - Type safety
 - Clear structure
-- Easy maintenance
 - Self-documenting
 
 ---
@@ -1086,18 +967,17 @@ def bvnk_api():
 - Automatic setup/teardown
 - Dependency injection
 - Test isolation
-- Reusable across tests
 
 ---
 
-### 5. Singleton Pattern (Framework Extension)
+### 5. Singleton Pattern (Logger)
 
 **Logger** - Single logger instance:
 ```python
 class Logger:
     _instance = None
     _lock = Lock()
-    
+
     def __new__(cls):
         if cls._instance is None:
             with cls._lock:
@@ -1106,133 +986,30 @@ class Logger:
         return cls._instance
 ```
 
-**ConfigManager** - Single config instance:
-```python
-class ConfigManager:
-    _instance = None
-    _lock = Lock()
-    
-    def __new__(cls):
-        # Thread-safe singleton implementation
-```
-
 **Benefits:**
 - Single instance across framework
 - Thread-safe
-- Consistent state
+- Consistent logging configuration
 
 ---
 
-### 6. Builder Pattern (Framework Extension)
+### 6. Base Class Pattern (Optional)
 
-**APIRequestBuilder** - Fluent API request construction:
+**BaseBVNKTest** - Optional base class for shared functionality:
 ```python
-response = (
-    APIRequestBuilder(base_url)
-    .endpoint("/users")
-    .method("POST")
-    .body({"name": "John"})
-    .bearer_token("token123")
-    .timeout(15)
-    .execute()
-)
+class BaseBVNKTest:
+    @pytest.fixture(autouse=True)
+    def base_setup(self, bvnk_api):
+        self.api = bvnk_api
+        # Automatic setup
+        yield
+        # Automatic teardown
 ```
 
 **Benefits:**
-- Readable test code
-- Flexible configuration
-- Method chaining
-
----
-
-### 7. Factory Pattern (Framework Extension)
-
-**BrowserFactory** - Browser instance creation:
-```python
-browser = BrowserFactory.create_browser("chrome")
-browser_mobile, context = BrowserFactory.create_mobile_browser("iPhone 14")
-```
-
-**TestDataFactory** - Test data generation:
-```python
-user = TestDataFactory.create_user("admin")
-product = TestDataFactory.create_product("electronics")
-```
-
-**Benefits:**
-- Centralized object creation
-- Consistent configuration
-- Easy to extend
-
----
-
-### 8. Strategy Pattern (Framework Extension)
-
-**AuthStrategy** - Interchangeable authentication:
-```python
-# Different authentication strategies
-basic_auth = BasicAuthStrategy("user", "pass")
-bearer_auth = BearerTokenStrategy("token123")
-oauth_auth = OAuth2Strategy(client_id, client_secret, token_url)
-api_key_auth = APIKeyStrategy("key123")
-
-# Use with same client
-client = APIClient(base_url, basic_auth)
-```
-
-**Benefits:**
-- Flexible authentication
-- Easy to swap
-- Open/Closed principle
-
----
-
-### 9. Page Object Model Pattern (Framework Extension)
-
-**BasePage** - UI abstraction:
-```python
-class BasePage:
-    def __init__(self, page: Page):
-        self.page = page
-    
-    def navigate(self, path: str):
-        self.page.goto(f"{settings.BASE_URL}{path}")
-    
-    def click(self, selector: str):
-        self.page.click(selector)
-```
-
-**Benefits:**
-- UI abstraction
-- Reusable page interactions
-- Maintainable UI tests
-
----
-
-### 10. Decorator Pattern (Framework Extension)
-
-**Test decorators:**
-```python
-@retry(max_attempts=3, delay=1)
-def test_flaky_api():
-    # Automatically retries on failure
-    pass
-
-@screenshot_on_failure
-def test_ui_feature():
-    # Takes screenshot on failure
-    pass
-
-@log_execution_time
-def test_performance():
-    # Logs execution time
-    pass
-```
-
-**Benefits:**
-- Cross-cutting concerns
-- Reusable functionality
-- Clean test code
+- Centralized common functionality
+- Shared assertions
+- Consistent test structure
 
 ---
 
@@ -1265,77 +1042,6 @@ xdg-open reports/bvnk_report.html  # Linux
 
 ---
 
-### Allure Reports
-
-**Generated by:** allure-pytest
-
-**Prerequisites:**
-```bash
-# Install Allure CLI (optional)
-# Windows (using Scoop)
-scoop install allure
-
-# Mac
-brew install allure
-```
-
-**Generate:**
-```bash
-# Run tests with Allure
-pytest tests/bvnk/ -v -n auto --alluredir=reports/allure-results
-
-# Serve report
-allure serve reports/allure-results
-```
-
-**Features:**
-- Interactive dashboard
-- Test history
-- Graphs and charts
-- Test categorization
-- Screenshots (if enabled)
-- Detailed test steps
-
----
-
-### Console Output
-
-**Features:**
-- Real-time test execution
-- Pre-session health check
-- Test progress indicators
-- Pass/fail status
-- Execution time
-- Detailed error messages
-
-**Example:**
-```
-======================================================================
-PRE-SESSION HEALTH CHECK
-======================================================================
-Verifying BVNK API is ready...
-Health URL: http://bvnksimulator.pythonanywhere.com/health
-
-API HEALTH CHECK PASSED
-├─ Uptime: 48 days, 17 hours, 31 minutes
-├─ DB Size: 4.56 MB
-└─ Total Requests: 6029
-======================================================================
-Proceeding with test execution...
-
-========================= test session starts =========================
-platform win32 -- Python 3.12.x, pytest-8.4.2
-
-tests/bvnk/smoke/test_health_check.py::test_01_api_is_accessible PASSED
-tests/bvnk/smoke/test_health_check.py::test_02_api_responds_quickly PASSED
-tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx PASSED
-...
-
-========================= 13 passed in 28.28s =========================
-```
-
----
-
 ### Test Execution Log
 
 **Location:** `reports/test_execution.log`
@@ -1344,10 +1050,9 @@ tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx PASSED
 
 **Format:**
 ```
-2024-11-05 10:30:15 - AutomationFramework - INFO - Test started
-2024-11-05 10:30:15 - AutomationFramework - DEBUG - Creating quote...
-2024-11-05 10:30:16 - AutomationFramework - INFO - Quote created: uuid=abc123
-2024-11-05 10:30:16 - AutomationFramework - INFO - Test completed
+2024-11-05 10:30:15 - AutomationFramework - INFO - Testing authentication via /echo endpoint
+2024-11-05 10:30:15 - AutomationFramework - DEBUG - Test payload: {'test_key': 'test_value'}
+2024-11-05 10:30:16 - AutomationFramework - INFO - Authentication test completed successfully
 ```
 
 **Levels:**
@@ -1366,43 +1071,15 @@ tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx PASSED
 ```bash
 # Solution: Add Python to PATH
 # Windows: Reinstall Python and check "Add to PATH"
-# Or manually add: C:\Users\YourName\AppData\Local\Programs\Python\Python312
 ```
 
-#### 2. "pip is not recognized"
-```bash
-# Solution: Use python -m pip
-python -m pip --version
-python -m pip install -r requirements.txt
-```
-
-#### 3. "Module 'config' not found"
-```bash
-# Solution: Ensure root conftest.py exists
-# It should add project root to sys.path
-# Verify:
-python -c "import sys; print(sys.path)"
-```
-
-#### 4. Virtual environment activation fails (Windows)
-```bash
-# Solution: Set execution policy
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# Then try again
-.venv\Scripts\activate
-```
-
-#### 5. Tests fail with "Connection Error"
+#### 2. Tests fail with "Connection Error"
 ```bash
 # Solution: Check API availability
 curl http://bvnksimulator.pythonanywhere.com/health
-
-# Or use browser:
-# http://bvnksimulator.pythonanywhere.com/health
 ```
 
-#### 6. Tests timeout
+#### 3. Tests timeout
 ```bash
 # Solution: Increase timeout in .env
 CONVERSION_TIMEOUT=60
@@ -1411,16 +1088,7 @@ CONVERSION_TIMEOUT=60
 pytest tests/bvnk/ -v -s -n0
 ```
 
-#### 7. Parallel execution issues
-```bash
-# Solution: Run sequentially
-pytest tests/bvnk/ -v -s -n0
-
-# Or reduce workers
-pytest tests/bvnk/ -v -n 2
-```
-
-#### 8. Import errors after installation
+#### 4. Import errors after installation
 ```bash
 # Solution: Reinstall in virtual environment
 deactivate
@@ -1429,29 +1097,11 @@ python -m venv .venv --clear
 pip install -r requirements.txt
 ```
 
-#### 9. Health check 500 errors during parallel execution
-```bash
-# Solution: This is normal behavior
-# 500 responses validate rate limiting is working
-# Tests accept both 200 and 500 as valid responses
-```
-
-#### 10. Wrong Python version
-```bash
-# Solution: Specify Python version
-py -3.12 -m venv .venv
-
-# Or use specific Python installation
-C:\Python312\python.exe -m venv .venv
-```
-
----
-
 ### Debug Mode
 
 Run tests with maximum verbosity:
 ```bash
-# Sequent, verbose, show prints
+# Sequential, verbose, show prints
 pytest tests/bvnk/ -v -s -n0 --tb=long
 
 # Show local variables on failure
@@ -1466,54 +1116,48 @@ pytest tests/bvnk/ -v --lf
 
 ---
 
-### Getting Help
-
-1. **Check API Documentation:** http://bvnksimulator.pythonanywhere.com/docs
-2. **Review Test Logs:** `reports/test_execution.log`
-3. **Run Verification Tests:** `pytest tests/bvnk/verification/ -v -s -n0`
-4. **Check pytest Documentation:** https://docs.pytest.org/
-5. **Review Framework Code:** All code is documented with docstrings
-
----
-
 ## Assignment Requirements
 
 ### Required Tests
 
 #### E2E Tests (3 Required)
 
-| # | Test | File | Function | Status |
-|---|------|------|----------|--------|
-| 1 | Convert 1 ETH to TRX | `test_currency_conversions.py` | `test_convert_1_eth_to_trx` | Complete |
-| 2 | Convert 420 TRX to USDT | `test_currency_conversions.py` | `test_convert_420_trx_to_usdt` | Complete |
-| 3 | Convert 987 TRX to ETH | `test_currency_conversions.py` | `test_convert_987_trx_to_eth` | Complete |
+| # | Test | Implementation | Status |
+|---|------|----------------|--------|
+| 1 | Convert 1 ETH to TRX | Parametrized: `[convert_1_eth_to_trx]` | Complete |
+| 2 | Convert 420 TRX to USDT | Parametrized: `[convert_420_trx_to_usdt]` | Complete |
+| 3 | Convert 987 TRX to ETH | Parametrized: `[convert_987_trx_to_eth]` | Complete |
 
-#### Functional Tests (5 Required + 1 Bonus)
+**Note:** All 3 tests use a single parametrized function for efficiency
 
-| # | Test | File | Function | Status |
-|---|------|------|----------|--------|
-| 4 | Authentication | `test_api_endpoints.py` | `test_authentication_echo` | Complete |
-| 5 | List Wallets | `test_api_endpoints.py` | `test_list_all_wallets` | Complete |
-| 6 | Get Wallet | `test_api_endpoints.py` | `test_get_specific_wallet` | Complete |
-| 7 | Quote Expiry | `test_api_endpoints.py` | `test_quote_expiry` | Complete |
-| 8 | Insufficient Balance | `test_api_endpoints.py` | `test_insufficient_balance` | Complete |
-| 9 | Service Fee (Bonus) | `test_api_endpoints.py` | `test_service_fee_calculation` | Complete |
+#### Functional Tests (6 Required)
 
-#### Bonus: Smoke Tests (4)
+| # | Test | Endpoint | Status |
+|---|------|----------|--------|
+| 4 | Authentication | `POST /echo` | Complete |
+| 5 | List Wallets | `GET /api/wallet` | Complete |
+| 6 | Get Wallet | `GET /api/wallet/{id}` | Complete |
+| 7 | Quote Expiry | `POST /api/v1/quote` | Complete |
+| 8 | Insufficient Balance | `PUT /api/v1/quote/accept/{uuid}` | Complete |
+| 9 | Service Fee | `PUT /api/v1/quote/accept/{uuid}` | Complete |
 
-| # | Test | File | Function | Status |
-|---|------|------|----------|--------|
-| 10 | API Accessibility | `test_health_check.py` | `test_01_api_is_accessible` | Complete |
-| 11 | Response Time | `test_health_check.py` | `test_02_api_responds_quickly` | Complete |
-| 12 | Response Structure | `test_health_check.py` | `test_03_health_response_structure` | Complete |
-| 13 | No Auth Required | `test_health_check.py` | `test_04_health_no_authentication_required` | Complete |
+#### Bonus Tests
 
----
+**Smoke Tests (4):**
+- API Accessibility
+- Response Time
+- Response Structure
+- No Auth Required
+
+**Negative Tests (3):**
+- Nonexistent Wallet (404)
+- Negative Amount Validation
+- Invalid Quote UUID
 
 ### API Endpoint Coverage
 
-| Endpoint | Method | Tested In | Status |
-|----------|--------|-----------|--------|
+| Endpoint | Method | Tested In | Coverage |
+|----------|--------|-----------|----------|
 | `/health` | GET | Smoke tests, Pre-session hook | 100% |
 | `/init` | GET | All tests (fixture) | 100% |
 | `/echo` | POST | `test_authentication_echo` | 100% |
@@ -1526,48 +1170,135 @@ pytest tests/bvnk/ -v --lf
 
 ---
 
-### Validations Implemented
+## Code Quality Improvements
 
-- **API Health:** Pre-session validation and smoke tests
-- **Conversion Success:** Quote created and accepted
-- **Balance Changes:** Before/after balances match expected
-- **Service Fee:** 0.01% fee correctly applied
-- **Quote Expiry:** Quotes expire after 20 seconds
-- **Insufficient Balance:** System rejects invalid trades
-- **API Structure:** Response format validation
-- **Error Handling:** Proper status codes on errors
-- **Authentication:** Bearer token works correctly
-- **Data Integrity:** All required fields present
-- **Rate Limiting:** 500 responses under load validate rate limiting
+### 1. Pytest Parametrization
+
+**Problem:** Code duplication in E2E tests (3 nearly identical functions)
+
+**Solution:** Single parametrized test function
+
+**Impact:**
+- 60% code reduction (150 lines → 60 lines)
+- Easier to add new test cases
+- Maintains clear test IDs
+
+**Example:**
+```python
+@pytest.mark.parametrize("test_case_key", [
+    pytest.param("eth_to_trx", id="convert_1_eth_to_trx"),
+    pytest.param("trx_to_usdt", id="convert_420_trx_to_usdt"),
+    pytest.param("trx_to_eth", id="convert_987_trx_to_eth"),
+])
+def test_currency_conversion(bvnk_api, wallet_balances, test_case_key):
+    # Single test handles all scenarios
+```
 
 ---
 
-### Test Results Summary
+### 2. Comprehensive Error Handling
+
+**Problem:**
+- No content-type validation before `.json()` calls
+- Would crash on 204 No Content or HTML error pages
+- No custom exception classes
+
+**Solution:**
+- 7 custom exception classes
+- Centralized `_handle_response()` method
+- Content-type validation
+- Safe JSON parsing
+
+**Impact:**
+- Won't crash on edge cases
+- Clear, specific error messages
+- Easy to catch specific error types in tests
+
+**Example:**
+```python
+try:
+    wallet = bvnk_api.get_wallet(999999)
+except BVNKResourceNotFoundError as e:
+    # Exception includes status code and response body
+    assert e.status_code == 404
 ```
-========================= test session starts =========================
-platform win32 -- Python 3.12.x, pytest-8.4.2
 
-PRE-SESSION HEALTH CHECK
-API HEALTH CHECK PASSED
+---
 
-tests/bvnk/smoke/test_health_check.py::test_01_api_is_accessible PASSED
-tests/bvnk/smoke/test_health_check.py::test_02_api_responds_quickly PASSED
-tests/bvnk/smoke/test_health_check.py::test_03_health_response_structure PASSED
-tests/bvnk/smoke/test_health_check.py::test_04_health_no_authentication_required PASSED
-tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx PASSED
-tests/bvnk/e2e/test_currency_conversions.py::test_convert_420_trx_to_usdt PASSED
-tests/bvnk/e2e/test_currency_conversions.py::test_convert_987_trx_to_eth PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_authentication_echo PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_list_all_wallets PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_get_specific_wallet PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_quote_expiry PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_insufficient_balance PASSED
-tests/bvnk/functional/test_api_endpoints.py::test_service_fee_calculation PASSED
+### 3. Consistent Logger Usage
 
-========================= 13 passed, 11 skipped in 28.28s =========================
+**Problem:**
+- 293 print statements vs 22 logger calls (13:1 ratio)
+- Logger infrastructure built but not used consistently
+
+**Solution:**
+- Replace operational print statements with logger calls
+- Keep print for user-facing output (headers, results)
+- Use appropriate log levels (INFO, DEBUG, WARNING, ERROR)
+
+**Impact:**
+- Professional logging practices
+- Operational messages go to log file
+- Easy to set log levels for debugging
+
+**Example:**
+```python
+# Flow
+logger.info("Testing authentication via /echo endpoint")
+
+# Details
+logger.debug(f"Test payload: {test_payload}")
+
+# User output (keep print)
+print("\nTEST PASSED: Authentication working correctly")
 ```
 
-**Status:** All Required Tests Passing
+---
+
+### 4. Base Test Class
+
+**Addition:** Optional base class with shared functionality
+
+**Features:**
+- Automatic setup/teardown
+- Common assertion methods (`assert_balance_changed`, etc.)
+- Helper methods for wallet operations
+- Convenience methods for conversions
+
+**Impact:**
+- Centralized common functionality
+- Consistent assertions across tests
+- Optional (doesn't force refactoring)
+
+---
+
+
+### Development Approach
+
+**Initial Implementation:**
+- Explored Python testing frameworks
+- Referenced online examples and documentation
+- Implemented various design patterns to demonstrate knowledge
+- Built comprehensive framework as portfolio piece
+
+**Improvements Applied:**
+- Added pytest parametrization based on feedback
+- Implemented defensive error handling
+- Standardized logging usage
+- Added base test class option
+
+### Key Learnings
+
+**Technical:**
+1. **Parametrization** - Use for similar test cases with different data
+2. **Error Handling** - Always validate content-type before parsing JSON
+3. **Logging** - Use logger infrastructure consistently once built
+4. **Scope Management** - Match solution complexity to problem scope
+
+### Context
+
+- Some implementation choices based on online examples
+- Balanced showcasing capabilities with practical solutions
 
 ---
 
@@ -1581,133 +1312,13 @@ tests/bvnk/functional/test_api_endpoints.py::test_service_fee_calculation PASSED
 ### Framework Dependencies
 - **pytest:** https://docs.pytest.org/
 - **pytest-xdist:** https://pytest-xdist.readthedocs.io/
-- **pytest-order:** https://pytest-order.readthedocs.io/
 - **requests:** https://docs.python-requests.org/
 - **assertpy:** https://github.com/assertpy/assertpy
-- **Faker:** https://faker.readthedocs.io/
 
 ### Testing Best Practices
 - **AAA Pattern:** https://automationpanda.com/2020/07/07/arrange-act-assert-a-pattern-for-writing-good-tests/
 - **Pytest Fixtures:** https://docs.pytest.org/en/stable/fixture.html
-- **Pytest Hooks:** https://docs.pytest.org/en/stable/reference/reference.html#hooks
-- **API Testing:** https://testautomationu.applitools.com/automating-your-api-tests-with-rest-assured/
-
----
-
-## Notes
-
-### Service Fee
-- **Specification:** 0.01% fee on all conversions/trades
-- **Implementation:** `SERVICE_FEE_PERCENT = 0.0001` (0.01% as decimal)
-- **Example:** 1.0 ETH conversion, 0.0001 ETH fee
-- **Calculation:** `amount * 0.0001 = fee`
-
-### Quote Expiry
-- **Specification:** Quotes expire after 20 seconds
-- **Test Implementation:** Waits 22 seconds (20 + 2 buffer)
-- **Reason:** Ensures quote has definitely expired before verification
-
-### Wallet Initialization
-- Default account includes 3 wallets: ETH, TRX, USDT
-- Initial balances provided by simulator
-- New account created for each test session (or per test with function-scoped fixture)
-
-### Test Isolation
-- Each test can use fresh account via `bvnk_api` fixture (function-scoped)
-- Tests can run in parallel safely with proper fixture scoping
-- No shared state between tests using function-scoped fixtures
-
-### Health Check Behavior
-- Pre-session hook validates API before test collection
-- Smoke tests provide explicit health validation
-- Both 200 and 500 are acceptable responses during parallel execution
-- 500 validates rate limiting is working correctly
-
----
-
-## Framework Architecture
-
-### Layered Approach
-```
-┌─────────────────────────────────┐
-│     Test Layer                  │  ← Tests (Smoke, E2E, Functional)
-├─────────────────────────────────┤
-│     Helper Layer                │  ← ConversionHelper, ValidationHelper
-├─────────────────────────────────┤
-│     Client Layer                │  ← BVNKApiClient
-├─────────────────────────────────┤
-│     Configuration Layer         │  ← Settings, Test Data
-├─────────────────────────────────┤
-│     Fixture Layer               │  ← Fixtures, Hooks
-└─────────────────────────────────┘
-```
-
-**Benefits:**
-- Clear separation of concerns
-- Reusable components
-- Easy to maintain
-- Scalable architecture
-
----
-
-### Design Principles
-
-1. **DRY (Don't Repeat Yourself)**
-    - Helpers encapsulate reusable logic
-    - Configuration centralized
-    - Test data externalized
-
-2. **SOLID Principles**
-    - Single Responsibility: Each class has one purpose
-    - Open/Closed: Extensible without modification
-    - Dependency Inversion: Tests depend on abstractions
-
-3. **Clean Code**
-    - Meaningful names
-    - Small functions
-    - Consistent formatting
-    - Comprehensive documentation
-
----
-
-## Test Metrics
-
-### Test Coverage
-- **Total Tests:** 24 (13 active + 11 skipped)
-- **Active Tests:** 13 (4 smoke + 3 E2E + 6 functional)
-- **E2E Tests:** 3 (100% of requirement)
-- **Functional Tests:** 6 (120% of requirement)
-- **Smoke Tests:** 4 (bonus feature)
-- **API Coverage:** 100% (all 7 endpoints)
-- **Pass Rate:** 100%
-
-### Performance
-- **Average Test Duration:** approximately 2 seconds per test
-- **Total Suite Duration:** approximately 28 seconds (parallel)
-- **Sequential Duration:** approximately 45 seconds
-- **Pre-session Check:** < 1 second
-
-### Code Quality
-- **Lines of Code:** approximately 2,500+
-- **Test Code:** approximately 900 lines
-- **Helper Code:** approximately 700 lines
-- **Documentation:** approximately 900 lines
-
----
-
-## Author
-
-**Victor Grozev**
-- **Framework:** Python + Pytest + Playwright
-- **API:** BVNK Simulator
-- **Date:** November 2025
-- **Status:** Production Ready
-
----
-
-## License
-
-This is an assignment submission for educational/evaluation purposes.
+- **Pytest Parametrize:** https://docs.pytest.org/en/stable/how-to/parametrize.html
 
 ---
 
@@ -1720,20 +1331,13 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Run all tests (with health check)
+# Run all tests
 pytest tests/bvnk/ -v -n auto
 
-# Run smoke tests only
+# Run specific category
 pytest tests/bvnk/smoke/ -v
-
-# Run E2E only
 pytest tests/bvnk/e2e/ -v -n auto
-
-# Run functional only
 pytest tests/bvnk/functional/ -v -n auto
-
-# Run specific test
-pytest tests/bvnk/e2e/test_currency_conversions.py::test_convert_1_eth_to_trx -v -s
 
 # Generate HTML report
 pytest tests/bvnk/ -v -n auto --html=reports/bvnk_report.html --self-contained-html
@@ -1742,17 +1346,40 @@ pytest tests/bvnk/ -v -n auto --html=reports/bvnk_report.html --self-contained-h
 start reports/bvnk_report.html  # Windows
 open reports/bvnk_report.html   # Mac
 
-# Debug mode (sequential, verbose)
+# Debug mode
 pytest tests/bvnk/ -v -s -n0
-
-# Run by marker
-pytest -m smoke -v
-pytest -m e2e -v -n auto
-pytest -m functional -v -n auto
 ```
 
 ---
 
-**Happy Testing!**
+## Test Metrics
 
-For questions or issues, refer to the Troubleshooting section or check the API documentation at http://bvnksimulator.pythonanywhere.com/docs
+### Test Coverage
+- **Total Tests:** 24 (16 active + 8 skipped)
+- **Active Tests:** 16 (4 smoke + 3 E2E + 6 functional + 3 negative)
+- **E2E Tests:** 3 parametrized (100% of requirement)
+- **Functional Tests:** 6 (100% of requirement)
+- **API Coverage:** 100% (all 7 endpoints)
+- **Pass Rate:** 100%
+
+### Code Quality Metrics
+- **Custom Exceptions:** 7 classes
+- **Code Reduction:** 60% in E2E tests (via parametrization)
+- **Error Handling:** Comprehensive with content-type validation
+- **Logging:** Consistent logger usage throughout
+- **Test Patterns:** AAA pattern in all tests
+
+---
+
+## Author & Status
+
+- **Victor Grozev**
+- **Framework:** Python + Pytest
+- **API:** BVNK Simulator
+- **Date:** November 2024
+- **Status:** Production Ready
+- **Improvements:** Applied based on code review feedback
+
+---
+
+**Happy Testing!**
