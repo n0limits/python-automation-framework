@@ -96,7 +96,7 @@ Automated testing suite for the BVNK cryptocurrency conversion API simulator, de
 - **Comprehensive Reporting**: HTML and Allure reports
 
 #### Architecture & Design
-- **AAA Pattern**: Arrange-Act-Assert in all tests
+- **AAA**: Arrange-Act-Assert in all tests
 - **Helper Classes**: Reusable test utilities (ConversionTestHelper, ApiValidationHelper)
 - **Base Test Class**: Optional base class for shared functionality
 - **Comprehensive Error Handling**: Custom exception hierarchy with content-type validation

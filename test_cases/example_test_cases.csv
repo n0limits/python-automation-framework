@@ -1,0 +1,17 @@
+ID,Title,Type,Priority,Steps,Expected Results
+TC-1001,Verify user can convert 1 ETH to TRX,e2e,High,"1. Initialize BVNK account and get bearer token
+2. Get current ETH wallet balance
+3. Get current TRX wallet balance
+4. Create a quote to convert 1 ETH to TRX
+5. Accept the quote
+6. Wait for transaction to complete
+7. Verify ETH balance decreased by 1 (+ service fee)
+8. Verify TRX balance increased","Transaction completes successfully with correct balance changes"
+TC-1002,Verify authentication via /echo endpoint,functional,Medium,"1. Initialize BVNK account
+2. Call /echo endpoint with test payload
+3. Verify response contains token expiry
+4. Verify echoed content matches request","Echo endpoint returns correct response with authentication working"
+TC-1003,Verify API health check endpoint,smoke,High,"1. Call /health endpoint (no authentication)
+2. Verify response status is 200
+3. Verify response contains uptime
+4. Verify response time is under 3 seconds","Health endpoint is accessible and responds quickly"
