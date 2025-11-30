@@ -38,7 +38,7 @@ git --version
 ### Step 2: Clone & Setup
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone <repo-url>
 cd python-automation-framework
 
 # Create virtual environment
@@ -126,7 +126,7 @@ git --version
 
 ### 3. Clone Repository
 ```bash
-git clone <your-repo-url>
+git clone <repo-url>
 cd python-automation-framework
 ```
 

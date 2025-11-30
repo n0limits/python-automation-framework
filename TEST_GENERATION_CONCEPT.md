@@ -646,7 +646,7 @@ class AutomatedTestGenerator:
 
             print(f"  ✓ Generated: {filepath}")
 
-        print(f"\n✅ Generated {len(test_cases)} test files in {output_dir}")
+        print(f"\n Generated {len(test_cases)} test files in {output_dir}")
 
     def generate_from_excel(self, excel_path: str, output_dir: str = None):
         """Generate tests from Excel file"""
@@ -677,7 +677,7 @@ class AutomatedTestGenerator:
 
             print(f"  ✓ Generated: {filepath}")
 
-        print(f"\n✅ Generated {len(test_cases)} test files in {output_dir}")
+        print(f"\n Generated {len(test_cases)} test files in {output_dir}")
 
 
 # Usage
@@ -687,8 +687,8 @@ if __name__ == '__main__':
 
     # Option 1: Generate from Azure DevOps
     generator.generate_from_azure_devops(
-        organization='your-org',
-        project='your-project',
+        organization='my-org',
+        project='my-project',
         pat_token=os.environ['AZURE_PAT_TOKEN']
     )
 
@@ -787,18 +787,18 @@ class TraceabilityManager:
 ## Limitations & Considerations
 
 ### What AI Can Do Well:
-- ✅ Parse natural language test cases
-- ✅ Understand test intent
-- ✅ Generate syntactically correct code
-- ✅ Follow patterns from examples
-- ✅ Adapt to variations in test case format
+-  Parse natural language test cases
+-  Understand test intent
+-  Generate syntactically correct code
+-  Follow patterns from examples
+-  Adapt to variations in test case format
 
 ### What AI Cannot Do:
-- ❌ Understand business logic without context
-- ❌ Know API-specific details (endpoints, auth, data models)
-- ❌ Generate tests for undocumented features
-- ❌ Guarantee 100% correct test logic
-- ❌ Handle complex multi-system integrations
+-  Understand business logic without context
+-  Know API-specific details (endpoints, auth, data models)
+-  Generate tests for undocumented features
+-  Guarantee 100% correct test logic
+-  Handle complex multi-system integrations
 
 ### Human Review Required:
 - Verify generated test logic is correct
@@ -811,17 +811,17 @@ class TraceabilityManager:
 
 ## Recommendation
 
-**For your use case, I recommend**:
+**For this use case, I recommend**:
 
 1. **Build a separate tool/CLI** that:
    - Reads test cases from Azure DevOps or Excel
    - Uses Claude API to generate test code
-   - Follows your current framework patterns
+   - Follows the current framework patterns
    - Outputs tests to `tests/bvnk/generated/`
 
-2. **Use your current framework as the foundation**:
+2. **Use the current framework as the foundation**:
    - Provide existing tests as examples to the AI
-   - Use your helpers, fixtures, and patterns
+   - Use the helpers, fixtures, and patterns
    - Keep the same directory structure
 
 3. **Start with a prototype**:
@@ -830,4 +830,4 @@ class TraceabilityManager:
    - Refine the output format
    - Then scale to batch generation
 
-This way, you leverage your framework's patterns while adding AI-powered generation capabilities.
+This way, we leverage the framework's patterns while adding AI-powered generation capabilities.

@@ -80,6 +80,7 @@ test-results/
 .DS_Store
 Thumbs.db
 desktop.ini
+nul
 
 # Temporary files
 *.tmp
