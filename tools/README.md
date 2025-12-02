@@ -8,9 +8,9 @@
 
 ### Can the current framework generate tests automatically?
 
-**Current framework**: ❌ Cannot generate tests automatically
+**Current framework**:  Cannot generate tests automatically
 
-**What you can build**: ✅ AI-powered test generator that:
+**What you can build**:  AI-powered test generator that:
 - Reads manual test cases (Azure DevOps, Excel, CSV)
 - Uses Claude API to generate pytest code
 - Follows your framework's patterns (AAA, helpers, fixtures)
@@ -88,8 +88,8 @@ def test_tc_1001(bvnk_api, wallet_balances):
 
 | Source | Status | Implementation |
 |--------|--------|----------------|
-| **Manual Input** | ✅ Ready | `simple_test_generator.py` |
-| **CSV/Excel** | ✅ Ready | Use pandas to read + generator |
+| **Manual Input** |  Ready | `simple_test_generator.py` |
+| **CSV/Excel** |  Ready | Use pandas to read + generator |
 | **Azure DevOps** | 📝 Concept | See `TEST_GENERATION_CONCEPT.md` |
 
 ---
@@ -107,10 +107,10 @@ def test_tc_1001(bvnk_api, wallet_balances):
 ## 💡 Why This Framework is Perfect for AI Generation
 
 Your framework has everything needed for successful AI test generation:
-- ✅ Clear patterns (AAA pattern, helpers, fixtures)
-- ✅ Reusable components (ConversionTestHelper, ApiValidationHelper)
-- ✅ Consistent structure (same test organization across all tests)
-- ✅ Good examples for AI to learn from
+-  Clear patterns (AAA pattern, helpers, fixtures)
+-  Reusable components (ConversionTestHelper, ApiValidationHelper)
+-  Consistent structure (same test organization across all tests)
+-  Good examples for AI to learn from
 
 The AI uses your existing tests as examples to generate new ones following the same patterns.
 
@@ -120,9 +120,9 @@ The AI uses your existing tests as examples to generate new ones following the s
 
 | File | Description | Status |
 |------|-------------|--------|
-| `tools/simple_test_generator.py` | Working prototype - ready to use! | ✅ Ready |
-| `tools/README.md` | This documentation | ✅ Ready |
-| `test_cases/example_test_cases.csv` | Sample CSV format for test cases | ✅ Ready |
+| `tools/simple_test_generator.py` | Working prototype - ready to use! |  Ready |
+| `tools/README.md` | This documentation |  Ready |
+| `test_cases/example_test_cases.csv` | Sample CSV format for test cases |  Ready |
 | `TEST_GENERATION_CONCEPT.md` | Full architecture & advanced features | 📝 Reference |
 
 ---
@@ -374,16 +374,16 @@ pytest tests/bvnk/generated/ -v --cov=utils
 ## Limitations
 
 **What the generator CAN do**:
-- ✅ Generate syntactically correct pytest code
-- ✅ Follow your framework's patterns
-- ✅ Use existing helpers and fixtures
-- ✅ Create appropriate test structure
+-  Generate syntactically correct pytest code
+-  Follow your framework's patterns
+-  Use existing helpers and fixtures
+-  Create appropriate test structure
 
 **What it CANNOT do**:
-- ❌ Understand complex business logic without clear description
-- ❌ Know API-specific details not in test case
-- ❌ Guarantee 100% correct test logic
-- ❌ Handle edge cases not described in test case
+-  Understand complex business logic without clear description
+-  Know API-specific details not in test case
+-  Guarantee 100% correct test logic
+-  Handle edge cases not described in test case
 
 **Always review generated tests before using in production!**
 
@@ -522,13 +522,13 @@ See `TEST_GENERATION_CONCEPT.md` for comprehensive architecture and advanced fea
 
 ---
 
-## ✅ Summary
+##  Summary
 
 **What you have now**:
-- ✅ Working test generator prototype (`simple_test_generator.py`)
-- ✅ Example test case format (CSV)
-- ✅ Complete documentation
-- ✅ Concept design for Azure DevOps integration
+-  Working test generator prototype (`simple_test_generator.py`)
+-  Example test case format (CSV)
+-  Complete documentation
+-  Concept design for Azure DevOps integration
 
 **What you can do**:
 1. Generate single test: `python tools/simple_test_generator.py`

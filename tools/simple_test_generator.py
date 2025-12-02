@@ -164,7 +164,7 @@ if __name__ == '__main__':
     # Save to file
     generator.save_test(test_code, test_case['id'])
 
-    print("\n✅ Test generation complete!")
+    print("\n Test generation complete!")
     print("\nNext steps:")
     print("1. Review the generated test code")
     print("2. Run: pytest tests/bvnk/generated/test_tc_1001.py -v")

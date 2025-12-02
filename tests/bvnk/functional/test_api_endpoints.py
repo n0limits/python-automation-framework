@@ -37,7 +37,7 @@ def test_authentication_echo(bvnk_api, print_test_header):
     response = helper.validate_echo_response(test_payload)
 
     logger.info("Authentication test completed successfully")  # FIXED: Use logger
-    print("\n✅ TEST PASSED: Authentication working correctly")  # Keep result output
+    print("\n TEST PASSED: Authentication working correctly")  # Keep result output
 
 
 @pytest.mark.bvnk
@@ -61,7 +61,7 @@ def test_list_all_wallets(bvnk_api, print_test_header):
     wallets = helper.validate_wallet_list(min_expected)
 
     logger.info(f"Successfully retrieved {len(wallets)} wallets")  # FIXED: Use logger
-    print(f"\n✅ TEST PASSED: Wallets listed successfully ({len(wallets)} wallets)")
+    print(f"\n TEST PASSED: Wallets listed successfully ({len(wallets)} wallets)")
 
 
 @pytest.mark.bvnk
@@ -95,7 +95,7 @@ def test_quote_expiry(bvnk_api, print_test_header):
     helper.verify_quote_expiry_error(quote_uuid, expected_statuses)
 
     logger.info("Quote expiry test completed successfully")  # FIXED: Use logger
-    print("\n✅ TEST PASSED: Quote expiry working correctly")
+    print("\n TEST PASSED: Quote expiry working correctly")
 
 
 @pytest.mark.bvnk
@@ -134,7 +134,7 @@ def test_insufficient_balance(bvnk_api, print_test_header):
     )
 
     logger.info("Insufficient balance test completed successfully")  # FIXED: Use logger
-    print("\n✅ TEST PASSED: Insufficient balance correctly rejected")
+    print("\n TEST PASSED: Insufficient balance correctly rejected")
 
 
 @pytest.mark.bvnk
@@ -206,7 +206,7 @@ def test_service_fee_calculation(bvnk_api, print_test_header):
     assert_that(actual_deducted).is_close_to(expected_total_deduction, 0.00001)
 
     logger.info("Service fee test completed successfully")  # FIXED: Use logger
-    print(f"\n✅ TEST PASSED: Service fee calculation correct")
+    print(f"\n TEST PASSED: Service fee calculation correct")
     print(f"    Amount deducted: {actual_deducted:.6f}")
     print(f"    Expected: {expected_total_deduction:.6f}")
     print(f"    Difference: {abs(actual_deducted - expected_total_deduction):.8f}")
@@ -258,7 +258,7 @@ def test_get_specific_wallet(bvnk_api, print_test_header):
     assert_that(specific_wallet['balance']).is_equal_to(first_wallet['balance'])
 
     logger.info("Wallet retrieval test completed successfully")  # FIXED: Use logger
-    print(f"\n✅ TEST PASSED: Specific wallet retrieved successfully")
+    print(f"\n TEST PASSED: Specific wallet retrieved successfully")
 
 
 if __name__ == '__main__':
