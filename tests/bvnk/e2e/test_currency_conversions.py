@@ -33,12 +33,6 @@ def test_currency_conversion(bvnk_api, wallet_balances, print_test_header, test_
     - 420 TRX → USDT
     - 987 TRX → ETH
 
-    Benefits of parametrization:
-    - Reduced code duplication
-    - Easy to add new test cases
-    - Consistent test logic across all scenarios
-    - Clear test IDs in reports
-
     Verifies:
     - Quote creation and acceptance
     - Transaction completion

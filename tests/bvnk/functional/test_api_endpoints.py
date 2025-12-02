@@ -1,12 +1,6 @@
 """
 Functional tests for BVNK API endpoints (FIXED VERSION)
 
-FIXES APPLIED:
-1. Replaced print statements with logger calls
-2. Kept print only for formatted test output
-3. Used appropriate log levels (DEBUG, INFO, ERROR)
-4. Removed excessive/obvious comments
-5. Kept only "WHY" comments, removed "WHAT" comments
 """
 import pytest
 from utils.bvnk.api_validation_helper import ApiValidationHelper
