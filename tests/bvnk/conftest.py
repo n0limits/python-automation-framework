@@ -300,10 +300,10 @@ def pytest_sessionstart(session):
 
         health_data = response.json()
 
-        print(f"\n✓ API HEALTH CHECK PASSED")
-        print(f"├─ Uptime: {health_data.get('uptime', 'N/A')}")
-        print(f"├─ DB Size: {health_data.get('approximate_db_size', 'N/A')}")
-        print(f"└─ Total Requests: {health_data.get('total_authenticated_requests', 0)}")
+        print(f"\n[OK] API HEALTH CHECK PASSED")
+        print(f"  - Uptime: {health_data.get('uptime', 'N/A')}")
+        print(f"  - DB Size: {health_data.get('approximate_db_size', 'N/A')}")
+        print(f"  - Total Requests: {health_data.get('total_authenticated_requests', 0)}")
         print("="*70)
         print("Proceeding with test execution...\n")
 

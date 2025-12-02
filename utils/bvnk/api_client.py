@@ -168,12 +168,20 @@ class BVNKApiClient:
                         response_body=error_body
                     )
             elif response.status_code in [410, 412]:
-                # Quote-specific errors
-                raise BVNKQuoteExpiredError(
-                    f"Quote expired or invalid for {endpoint}",
-                    status_code=response.status_code,
-                    response_body=error_body
-                )
+                # Check if it's insufficient balance (similar to 422 handling)
+                if 'balance' in error_body.lower() or 'insufficient' in error_body.lower():
+                    raise BVNKInsufficientBalanceError(
+                        f"Insufficient balance for {endpoint}",
+                        status_code=response.status_code,
+                        response_body=error_body
+                    )
+                else:
+                    # Quote-specific errors
+                    raise BVNKQuoteExpiredError(
+                        f"Quote expired or invalid for {endpoint}",
+                        status_code=response.status_code,
+                        response_body=error_body
+                    )
             elif response.status_code >= 500:
                 raise BVNKServerError(
                     f"Server error for {endpoint}",
