@@ -138,18 +138,31 @@ class ConversionTestHelper:
         print("ASSERTIONS")
         print(f"{'='*70}")
 
-        assert_that(from_change).described_as(
-            f"{from_currency} should decrease by {amount}"
-        ).is_close_to(amount, 0.0001)
-        print(f" {from_currency} decreased by expected amount")
+        # Calculate expected deduction (amount + fee)
+        from utils.bvnk.helpers import calculate_expected_fee
+        expected_fee = calculate_expected_fee(amount, settings.SERVICE_FEE_PERCENT)
+        expected_total_deduction = amount + expected_fee
 
+        # Verify source currency decreased by amount + fee
+        assert_that(from_change).described_as(
+            f"{from_currency} should decrease by {amount} (amount) + {expected_fee:.6f} (fee) = {expected_total_deduction:.6f}"
+        ).is_close_to(expected_total_deduction, 0.00001)
+        print(f" {from_currency} decreased by expected amount:")
+        print(f"    - Amount converted: {amount}")
+        print(f"    - Service fee (0.01%): {expected_fee:.6f}")
+        print(f"    - Total deducted: {from_change:.6f}")
+        print(f"    - Expected: {expected_total_deduction:.6f}")
+
+        # Verify destination currency increased
         assert_that(to_change).described_as(
             f"{to_currency} should increase"
         ).is_greater_than(0)
         print(f" {to_currency} increased (received {to_change})")
 
         print(f"\n{'='*70}")
-        print(f" CONVERSION VERIFIED: {amount} {from_currency} → {to_change} {to_currency}")
+        print(f" CONVERSION VERIFIED:")
+        print(f"    Sent: {from_change:.6f} {from_currency} (incl. {expected_fee:.6f} fee)")
+        print(f"    Received: {to_change} {to_currency}")
         print(f"{'='*70}\n")
 
         return from_change, to_change

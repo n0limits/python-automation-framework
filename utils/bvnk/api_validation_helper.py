@@ -7,6 +7,7 @@ from assertpy import assert_that
 from config.settings import settings
 import time
 import requests
+from utils.bvnk.api_client import BVNKInsufficientBalanceError, BVNKQuoteExpiredError
 
 
 class ApiValidationHelper:
@@ -143,14 +144,14 @@ class ApiValidationHelper:
             quote = self.bvnk_api.create_quote(from_currency, to_currency, excessive_amount)
             self.bvnk_api.accept_quote(quote['uuid'])
             raise AssertionError("Should have rejected insufficient balance")
-        except requests.exceptions.HTTPError as e:
-            print(f" Correctly rejected: {e.response.status_code}")
+        except BVNKInsufficientBalanceError as e:
+            print(f" Correctly rejected: {e.status_code}")
 
-            assert_that(e.response.status_code).described_as(
+            assert_that(e.status_code).described_as(
                 f"Insufficient balance error should be one of {expected_status_codes}"
             ).is_in(*expected_status_codes)
 
-            print(f" Error status code is valid: {e.response.status_code}")
+            print(f" Error status code is valid: {e.status_code}")
 
     def verify_quote_expiry_error(self, quote_uuid: str, expected_status_codes: List[int]):
         """
@@ -165,14 +166,14 @@ class ApiValidationHelper:
         try:
             self.bvnk_api.accept_quote(quote_uuid)
             raise AssertionError("Expected quote to be expired, but it was accepted")
-        except requests.exceptions.HTTPError as e:
+        except BVNKQuoteExpiredError as e:
             print(f"Quote correctly expired: {e}")
 
-            assert_that(e.response.status_code).described_as(
+            assert_that(e.status_code).described_as(
                 f"Expired quote error should be one of {expected_status_codes}"
             ).is_in(*expected_status_codes)
 
-            print(f" Error status code is valid: {e.response.status_code}")
+            print(f" Error status code is valid: {e.status_code}")
 
     def verify_service_fee(
             self,

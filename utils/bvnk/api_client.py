@@ -1,5 +1,13 @@
 """
-BVNK API Client for interacting with the simulator
+BVNK API Client
+
+Error Handling Features:
+1. Custom error handling classes
+2. Content-type validation before JSON parsing
+3. Handles 204 No Content gracefully
+4. Contextual error messages
+5. Centralized error handling
+6. Proper exception hierarchy
 """
 import requests
 import time
@@ -7,8 +15,69 @@ from typing import Dict, Any, Optional
 from config.settings import settings
 
 
+# ============================================
+# CUSTOM ERROR HANDLING CLASSES
+# ============================================
+
+class BVNKApiError(Exception):
+    """Base exception for all BVNK API errors"""
+
+    def __init__(self, message: str, status_code: Optional[int] = None, response_body: Optional[str] = None):
+        self.message = message
+        self.status_code = status_code
+        self.response_body = response_body
+        super().__init__(self.message)
+
+    def __str__(self):
+        parts = [self.message]
+        if self.status_code:
+            parts.append(f"Status: {self.status_code}")
+        if self.response_body:
+            parts.append(f"Response: {self.response_body[:200]}")  # Limit response length
+        return " | ".join(parts)
+
+
+class BVNKAuthenticationError(BVNKApiError):
+    """Authentication failed (401)"""
+    pass
+
+
+class BVNKResourceNotFoundError(BVNKApiError):
+    """Resource not found (404)"""
+    pass
+
+
+class BVNKValidationError(BVNKApiError):
+    """Request validation failed (400, 422)"""
+    pass
+
+
+class BVNKQuoteExpiredError(BVNKApiError):
+    """Quote has expired (410, 412)"""
+    pass
+
+
+class BVNKInsufficientBalanceError(BVNKApiError):
+    """Insufficient balance for operation (412, 422)"""
+    pass
+
+
+class BVNKServerError(BVNKApiError):
+    """Server error (500, 502, 503, 504)"""
+    pass
+
+
+class BVNKInvalidResponseError(BVNKApiError):
+    """Response is not valid JSON or has unexpected content-type"""
+    pass
+
+
+# ============================================
+# API CLIENT
+# ============================================
+
 class BVNKApiClient:
-    """Client for BVNK API interactions"""
+    """Client for BVNK API interactions with proper error handling"""
 
     def __init__(self, bearer_token: Optional[str] = None):
         """
@@ -33,27 +102,151 @@ class BVNKApiClient:
                 'Authorization': f'Bearer {self.bearer_token}'
             })
 
+    # ============================================
+    # CENTRALIZED ERROR HANDLING
+    # ============================================
+
+    def _handle_response(self, response: requests.Response, endpoint: str = "") -> Dict[str, Any]:
+        """
+        Centralized response handling with proper error checking
+
+        Features:
+        - Content-type validation before JSON parsing
+        - Handles 204 No Content gracefully
+        - Custom exceptions with context
+        - Handles HTML error pages
+
+        Args:
+            response: Response object from requests
+            endpoint: API endpoint being called (for error context)
+
+        Returns:
+            Parsed JSON response or empty dict for 204
+
+        Raises:
+            BVNKAuthenticationError: For 401 errors
+            BVNKResourceNotFoundError: For 404 errors
+            BVNKValidationError: For 400, 422 errors
+            BVNKQuoteExpiredError: For 410, 412 errors (quote-specific)
+            BVNKServerError: For 5xx errors
+            BVNKInvalidResponseError: For invalid JSON or content-type
+        """
+        # Handle HTTP errors first
+        if not response.ok:
+            error_body = response.text[:500]  # Limit error body size
+
+            if response.status_code == 401:
+                raise BVNKAuthenticationError(
+                    f"Authentication failed for {endpoint}",
+                    status_code=401,
+                    response_body=error_body
+                )
+            elif response.status_code == 404:
+                raise BVNKResourceNotFoundError(
+                    f"Resource not found: {endpoint}",
+                    status_code=404,
+                    response_body=error_body
+                )
+            elif response.status_code == 400:
+                raise BVNKValidationError(
+                    f"Bad request to {endpoint}",
+                    status_code=400,
+                    response_body=error_body
+                )
+            elif response.status_code == 422:
+                # Could be validation or insufficient balance
+                if 'balance' in error_body.lower() or 'insufficient' in error_body.lower():
+                    raise BVNKInsufficientBalanceError(
+                        f"Insufficient balance for {endpoint}",
+                        status_code=422,
+                        response_body=error_body
+                    )
+                else:
+                    raise BVNKValidationError(
+                        f"Validation failed for {endpoint}",
+                        status_code=422,
+                        response_body=error_body
+                    )
+            elif response.status_code in [410, 412]:
+                # Check if it's insufficient balance (similar to 422 handling)
+                if 'balance' in error_body.lower() or 'insufficient' in error_body.lower():
+                    raise BVNKInsufficientBalanceError(
+                        f"Insufficient balance for {endpoint}",
+                        status_code=response.status_code,
+                        response_body=error_body
+                    )
+                else:
+                    # Quote-specific errors
+                    raise BVNKQuoteExpiredError(
+                        f"Quote expired or invalid for {endpoint}",
+                        status_code=response.status_code,
+                        response_body=error_body
+                    )
+            elif response.status_code >= 500:
+                raise BVNKServerError(
+                    f"Server error for {endpoint}",
+                    status_code=response.status_code,
+                    response_body=error_body
+                )
+            else:
+                # Generic HTTP error
+                raise BVNKApiError(
+                    f"HTTP {response.status_code} for {endpoint}",
+                    status_code=response.status_code,
+                    response_body=error_body
+                )
+
+        # Handle successful responses
+        # Check for 204 No Content
+        if response.status_code == 204:
+            return {}  # No content, return empty dict
+
+        # Validate content-type before parsing JSON
+        content_type = response.headers.get('Content-Type', '')
+
+        if 'application/json' not in content_type:
+            raise BVNKInvalidResponseError(
+                f"Expected JSON response from {endpoint}, got {content_type}",
+                status_code=response.status_code,
+                response_body=response.text[:500]
+            )
+
+        # Safely parse JSON with error handling
+        try:
+            return response.json()
+        except ValueError as e:
+            raise BVNKInvalidResponseError(
+                f"Invalid JSON in response from {endpoint}: {str(e)}",
+                status_code=response.status_code,
+                response_body=response.text[:500]
+            ) from e
+
+    # ============================================
+    # API METHODS
+    # ============================================
+
     def init_account(self) -> Dict[str, Any]:
         """
         Initialize a new simulated account and get bearer token
 
         Returns:
             Dict containing bearer token and account info
+
+        Raises:
+            BVNKApiError: If initialization fails
         """
         print("\nInitializing BVNK account...")
 
-        # Call /init endpoint (no auth required for this endpoint)
         response = self.session.get(f"{self.base_url}/init")
-        response.raise_for_status()
-        data = response.json()
+        data = self._handle_response(response, endpoint="/init")
 
         print(f"Response from /init: {data}")
 
-        # Extract access_token from response (API returns 'access_token', not 'token')
+        # Extract access_token from response
         token = data.get('access_token')
 
         if not token:
-            raise ValueError(f"No access_token found in /init response. Response: {data}")
+            raise BVNKApiError(f"No access_token found in /init response. Response: {data}")
 
         # Store token
         self.bearer_token = token
@@ -78,13 +271,15 @@ class BVNKApiClient:
 
         Returns:
             Dict containing token expiry and echoed content
+
+        Raises:
+            BVNKAuthenticationError: If authentication fails
         """
         response = self.session.post(
             f"{self.base_url}/echo",
             json=payload if payload else {}
         )
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response, endpoint="/echo")
 
     def list_wallets(self) -> list:
         """
@@ -92,10 +287,12 @@ class BVNKApiClient:
 
         Returns:
             List of wallet dictionaries
+
+        Raises:
+            BVNKAuthenticationError: If not authenticated
         """
         response = self.session.get(f"{self.base_url}/api/wallet")
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response, endpoint="/api/wallet")
 
     def get_wallet(self, wallet_id: int) -> Dict[str, Any]:
         """
@@ -106,13 +303,15 @@ class BVNKApiClient:
 
         Returns:
             Wallet details dictionary
+
+        Raises:
+            BVNKResourceNotFoundError: If wallet doesn't exist
         """
         print(f"\nGetting wallet {wallet_id}...")
 
         response = self.session.get(f"{self.base_url}/api/wallet/{wallet_id}")
-        response.raise_for_status()
+        wallet = self._handle_response(response, endpoint=f"/api/wallet/{wallet_id}")
 
-        wallet = response.json()
         print(f" Wallet retrieved: {wallet['currency']['code']}")
 
         return wallet
@@ -128,6 +327,10 @@ class BVNKApiClient:
 
         Returns:
             Dict containing quote details including UUID
+
+        Raises:
+            BVNKValidationError: If validation fails
+            BVNKInsufficientBalanceError: If insufficient balance
         """
         # First, get wallets to find wallet IDs
         wallets = self.list_wallets()
@@ -146,9 +349,9 @@ class BVNKApiClient:
                 to_wallet_id = wallet.get('id')
 
         if not from_wallet_id:
-            raise ValueError(f"Wallet not found for currency: {from_currency}")
+            raise BVNKValidationError(f"Wallet not found for currency: {from_currency}")
         if not to_wallet_id:
-            raise ValueError(f"Wallet not found for currency: {to_currency}")
+            raise BVNKValidationError(f"Wallet not found for currency: {to_currency}")
 
         print(f"\nCreating quote:")
         print(f"  From: {from_currency} (wallet ID: {from_wallet_id})")
@@ -177,14 +380,7 @@ class BVNKApiClient:
             json=payload
         )
 
-        # Print error details if request fails
-        if not (200 <= response.status_code < 300):
-            print(f"\n Error creating quote:")
-            print(f"  Status: {response.status_code}")
-            print(f"  Response: {response.text}")
-
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response, endpoint="/api/v1/quote")
 
     def accept_quote(self, quote_uuid: str) -> Dict[str, Any]:
         """
@@ -195,12 +391,15 @@ class BVNKApiClient:
 
         Returns:
             Dict containing conversion result
+
+        Raises:
+            BVNKQuoteExpiredError: If quote has expired
+            BVNKResourceNotFoundError: If quote doesn't exist
         """
         response = self.session.put(
             f"{self.base_url}/api/v1/quote/accept/{quote_uuid}"
         )
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response, endpoint=f"/api/v1/quote/accept/{quote_uuid}")
 
     def get_quote(self, quote_uuid: str) -> Dict[str, Any]:
         """
@@ -211,14 +410,15 @@ class BVNKApiClient:
 
         Returns:
             Dict containing quote details
+
+        Raises:
+            BVNKResourceNotFoundError: If quote doesn't exist
         """
         response = self.session.get(
             f"{self.base_url}/api/v1/quote/{quote_uuid}"
         )
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response, endpoint=f"/api/v1/quote/{quote_uuid}")
 
-# TODO change poll_interval from 2 to 1 - optimisation + parralel execution with xdist
     def wait_for_quote_completion(self, quote_uuid: str, timeout: int = 20, initial_poll_interval: float = 0.5) -> Dict[str, Any]:
         """
         Wait for a quote to complete processing with exponential backoff
@@ -230,6 +430,10 @@ class BVNKApiClient:
 
         Returns:
             Final quote status dict
+
+        Raises:
+            TimeoutError: If quote doesn't complete within timeout
+            BVNKApiError: If quote fails
         """
         start_time = time.time()
         elapsed = 0
@@ -253,7 +457,7 @@ class BVNKApiClient:
             # Check if failed
             if payment_status in ['FAILED', 'CANCELLED', 'EXPIRED'] or \
                     quote_status in ['FAILED', 'CANCELLED', 'EXPIRED', 'REJECTED']:
-                raise ValueError(
+                raise BVNKApiError(
                     f"Transaction failed: Quote status={quote_status}, Payment status={payment_status}"
                 )
 

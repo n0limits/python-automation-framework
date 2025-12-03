@@ -5,6 +5,7 @@ import pytest
 import requests
 from utils.bvnk.helpers import get_wallet_by_currency
 from utils.bvnk.test_data import ERROR_STATUS_CODES
+from utils.bvnk.api_client import BVNKResourceNotFoundError, BVNKValidationError
 
 
 @pytest.mark.bvnk
@@ -23,9 +24,9 @@ def test_get_nonexistent_wallet(bvnk_api, print_test_header):
     try:
         bvnk_api.get_wallet(wallet_id)
         raise AssertionError("API should reject nonexistent wallet")
-    except requests.exceptions.HTTPError as e:
-        print(f"Correctly rejected nonexistent wallet: {e.response.status_code}")
-        assert e.response.status_code == 404
+    except BVNKResourceNotFoundError as e:
+        print(f"Correctly rejected nonexistent wallet: {e.status_code}")
+        assert e.status_code == 404
 
     print("\n TEST PASSED: Nonexistent wallet request correctly rejected")
 
@@ -55,9 +56,9 @@ def test_create_quote_negative_amount(bvnk_api, print_test_header):
     try:
         bvnk_api.create_quote('ETH', 'TRX', negative_amount)
         raise AssertionError("API should reject negative amount")
-    except requests.exceptions.HTTPError as e:
-        print(f"Correctly rejected negative amount: {e.response.status_code}")
-        assert e.response.status_code in [400, 422]
+    except BVNKValidationError as e:
+        print(f"Correctly rejected negative amount: {e.status_code}")
+        assert e.status_code in [400, 422]
 
 
 @pytest.mark.bvnk
@@ -77,8 +78,8 @@ def test_accept_invalid_quote_uuid(bvnk_api, print_test_header):
     try:
         bvnk_api.accept_quote(invalid_uuid)
         raise AssertionError("API should reject invalid quote UUID")
-    except requests.exceptions.HTTPError as e:
-        print(f"Correctly rejected invalid UUID: {e.response.status_code}")
-        assert e.response.status_code in expected_statuses
+    except BVNKValidationError as e:
+        print(f"Correctly rejected invalid UUID: {e.status_code}")
+        assert e.status_code in expected_statuses
 
     print("\n TEST PASSED: Invalid quote UUID correctly rejected")
